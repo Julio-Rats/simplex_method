@@ -1,4 +1,4 @@
-all: sistema struct simplex main
+all: sistema struct simpl input main
 	gcc *.o -o simplex
 
 sistema:
@@ -7,11 +7,13 @@ sistema:
 struct:
 	gcc -c structs.h
 
-simplex:
+simpl:
 	gcc -c simplex.h simplex.c
 
+input:
+	gcc -c input.h input.c
 main:
 	gcc -c main.c
 
 clear:
-	rm *.o
+	rm *.o *.gch
