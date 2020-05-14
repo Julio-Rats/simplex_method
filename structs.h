@@ -6,8 +6,8 @@
 #include <time.h>
 #include <stdint.h>
 
-#define true   1
-#define false  0
+#define true       1
+#define false      0
 
 typedef u_int16_t  bool;
 typedef char*      string;
@@ -19,10 +19,10 @@ typedef enum
 
 typedef struct
 {
-    double      custo;      //  Custo na função objetivo (C);
-    string      name;       // Nome da variavel, ex: "x1", "x2".
-    vartype_e   type;       // Tipo da variavel (folga ou artificial).
-    double**    aj;         // Coluna com suas restrições.
+    double          custo;          //  Custo na função objetivo (C);
+    string          name;           // Nome da variavel, ex: "x1", "x2".
+    vartype_e       type;           // Tipo da variavel (folga ou artificial).
+    double**        aj;             // Coluna com suas restrições.
 }variavel_t;
 
 extern u_int16_t    number_base;    // Dimensão da matriz basica (B).

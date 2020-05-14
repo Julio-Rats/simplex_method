@@ -11,8 +11,8 @@ typedef struct
 
 double**  matriz_Base;   //  Matriz com as aj colunas de A, das j variaveis basicas.
 
-void simplex();
-void calc_menor_custo(double valor, int var);
-int  var_menor_custo();
+void      simplex();
+void      calc_menor_custo(double valor, int var);
+int       var_menor_custo();
 
 #endif

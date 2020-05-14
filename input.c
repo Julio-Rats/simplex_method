@@ -1,83 +1,13 @@
 #include "input.h"
 
-char types_token[][15] = {"NUM", "VAR", "MULT", "SOMA", "SUB", "NL", "EF", "MENORIGUAL",
-"MAIORIGUAL", "IGUAL", "ERROR"};
-
-variavel_t*  list_var     = NULL;
-int          num_var      = 0;
+variavel_t*  list_var     = NULL;  // Vetor auxiliar para ler restrições
+int          num_var      = 0;     // Length do vetor list_var.
 
 u_int16_t    number_base  = 0;      // Dimensão da matriz basica (B).
 u_int16_t    number_Nbase = 0;      // Dimensão da matriz não basica (N).
-double**     vetor_b      = NULL;   // Vetor B
+double**     vetor_b      = NULL;   // Vetor B.
 variavel_t*  var_base     = NULL;   // Variveis basicas.
 variavel_t*  var_Nbase    = NULL;   // Variveis não basicas.
-
-string* split(string line, char token, int* length)
-{
-    string* tokens = NULL;
-    int pos_i = 0, pos_f = 0, num = 0;
-    *length = 0;
-
-    for(int i=0; line[i] != '\0'; i++)
-    {
-        if (line[i] == token)
-        {
-            if (pos_i == i)
-            {
-                pos_i = i+1;
-                continue;
-            }
-
-            pos_f = i;
-            if (!tokens)
-              tokens = (string*) malloc(sizeof(string)*(++num));
-            else
-              tokens = (string*) realloc(tokens, sizeof(string)*(++num));
-
-            tokens[num-1] = (string) malloc(sizeof(char)*64);
-            memcpy(tokens[num-1], line+pos_i, pos_f-pos_i);
-            tokens[num-1][pos_f-pos_i+1] = '\0';
-            (*length)++;
-            pos_i = i+1;
-        }
-        if (line[i+1] == '\0')
-        {
-            if (pos_f == i)
-                continue;
-
-            pos_f = i+1;
-            if (!tokens)
-              tokens = (string*) malloc(sizeof(string)*(++num));
-            else
-              tokens = (string*) realloc(tokens, sizeof(string)*(++num));
-
-            tokens[num-1] = (string) malloc(sizeof(char)*64);
-            memcpy(tokens[num-1], line+pos_i, pos_f-pos_i);
-            tokens[num-1][pos_f-pos_i+1] = '\0';
-            (*length)++;
-        }
-    }
-    return tokens;
-}
-
-string trim(string line, char token)
-{
-    int pos_i = 0, pos_f = 0;
-
-    for (int i = 0; line[i] != '\0'; i++)
-    {
-        if ((pos_i == 0 )&&(line[i] != token))
-            pos_i = i;
-
-        if (line[i] != token)
-            pos_f = i;
-    }
-    string line_trim = (string) malloc(sizeof(char)*(pos_f-pos_i+2));
-    memcpy(line_trim, line+pos_i, pos_f-pos_i+1);
-    line_trim[pos_f-pos_i+1] = '\0';
-
-    return line_trim;
-}
 
 string random_var(string prefixo, int index)
 {
@@ -117,7 +47,6 @@ token_t get_token()
                 state_atual = SMAIORIGUAL;
             }else if (char_atual == '=')
             {
-                // token.value = "=";
                 strcpy(token.value, "=");
                 token.type = IGUAL;
                 break;
@@ -287,17 +216,13 @@ void funcao()
 {
     token = get_token();
     if (token.type == SOMA)
-    {
           escalar(1);
-    }else if (token.type == SUB)
-    {
+    else if (token.type == SUB)
           escalar(-1);
-    }else if (token.type == NUM)
-    {
+    else if (token.type == NUM)
           variavel(atof(token.value));
-    }else if (token.type == VAR)
+    else if (token.type == VAR)
     {
-          // printf("%.2lf*%s ", (double)sinal, token.value);
           variavel_t aux;
           aux.custo = (double)sinal;
           aux.name  = (string) malloc(sizeof(char)*(strlen(token.value)+1));
@@ -321,16 +246,10 @@ void proxima()
 {
     token = get_token();
     if (token.type == SOMA)
-    {
           escalar(1);
-    }else if (token.type == SUB)
-    {
+    else if (token.type == SUB)
           escalar(-1);
-    }else if (token.type == MULT)
-    {
-          printf("\n[ERRO] Sintaxe errada, esperava um escalar ou uma variavel, porém foi recebido %s\n\n", token.value);
-          exit(1);
-    }else if (token.type == VAR)
+    else if ((token.type == MULT)||(token.type == VAR))
     {
           printf("\n[ERRO] Sintaxe errada, esperava um escalar ou uma variavel, porém foi recebido %s\n\n", token.value);
           exit(1);
@@ -342,9 +261,9 @@ void escalar(int sinal_var)
     token = get_token();
     if (token.type == NUM)
         variavel((double)(atof(token.value)*sinal_var));
+
     else if (token.type == VAR)
     {
-        // printf("%.2lf*%s ", (double)(sinal*sinal_var), token.value);
         variavel_t aux;
         aux.custo = (double)(sinal*sinal_var);
         aux.name  = (string) malloc(sizeof(char)*(strlen(token.value)+1));
@@ -372,7 +291,6 @@ void variavel(double escalar)
 
     if (token.type == VAR)
     {
-        // printf("%.2lf*%s ", (double)(sinal*escalar), token.value);
         variavel_t aux;
         aux.custo = (double)(sinal*escalar);
         aux.name  = (string) malloc(sizeof(char)*(strlen(token.value)+1));
@@ -399,7 +317,6 @@ void restricao()
         printf("\n[ERRO] Sintaxe errada, esperava conjunto de restrições, porém foi recebido %s\n\n", token.value);
         exit(1);
     }
-
     line();
 }
 
@@ -458,17 +375,14 @@ void proxima_restrict()
 {
     token = get_token();
     if (token.type == SOMA)
-    {
           escalar_restrict(1);
-    }else if (token.type == SUB)
-    {
+    else if (token.type == SUB)
           escalar_restrict(-1);
-    }else if ((token.type == MENORIGUAL)||(token.type == IGUAL))
-    {
+    else if ((token.type == MENORIGUAL)||(token.type == IGUAL))
           menor_igual();
-    }else if (token.type == MAIORIGUAL){
+    else if (token.type == MAIORIGUAL)
           maior_igual();
-    }else if (token.type == MULT)
+    else if (token.type == MULT)
     {
           printf("\n[ERRO] Sintaxe errada, esperava um escalar ou uma variavel, porém foi recebido %s\n\n", token.value);
           exit(1);
@@ -576,7 +490,6 @@ void menor_igual()
     token = get_token();
     if (token.type == NUM)
     {
-
         for (int i = 0; i < number_base; i++)
         {
             var_base[i].aj[0] = (double*) realloc(var_base[i].aj[0], sizeof(double)*(number_base+1));
@@ -594,7 +507,6 @@ void menor_igual()
             vetor_b[number_base-1]  = (double*)  malloc(sizeof(double));
         }
         vetor_b[number_base-1][0] = (double)atof(token.value);
-
 
         double** vetor_aux = (double**) malloc(sizeof(double*));
         vetor_aux[0] = (double*) calloc(number_base, sizeof(double));
@@ -651,11 +563,9 @@ void maior_igual()
         var_base[number_base-1]   = aux;
 
         if (number_Nbase == 0)
-        {
             var_Nbase = (variavel_t*) malloc(sizeof(variavel_t)*(++number_Nbase));
-        }else{
+        else
             var_Nbase = (variavel_t*) realloc(var_Nbase, sizeof(variavel_t)*(++number_Nbase));
-        }
 
         static u_int16_t number_artifN = 1;
         vetor_aux = (double**) malloc(sizeof(double*));

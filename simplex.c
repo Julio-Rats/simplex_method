@@ -5,7 +5,6 @@ int       len_custos = 0;
 
 void simplex()
 {
-
     double**   lambda  = NULL;
     double**   Xb      = NULL;
     double**   vetor_y = NULL;
@@ -18,19 +17,16 @@ void simplex()
 
     while(true)
     {
-
         printf("\t\tITERAÇÃO %d\n\n", iter++);
         printf("Variaveis Basicas \t B[");
         for (int i = 0; i < number_base-1; i++)
-        {
             printf("%s, ", var_base[i].name);
-        }
+
         printf("%s]\n", var_base[number_base-1].name);
         printf("Variaveis Não Basicas \t N[");
         for (int i = 0; i < number_Nbase-1; i++)
-        {
             printf("%s, ", var_Nbase[i].name);
-        }
+
         printf("%s]\n\n", var_Nbase[number_Nbase-1].name);
 
         if (lambda)
@@ -58,13 +54,9 @@ void simplex()
         {
           printf("\n");
           for (int j = 0; j < number_base; j++)
-          {
-            printf("%.2lf\t", matriz_Base[i][j]);
-          }
+              printf("%.2lf\t", matriz_Base[i][j]);
         }
         printf("\n\n");
-
-        // lambda = multi_matriz(coeficientes, matriz_Base, 1, number_base, number_base);
 
         lambda = transposta(decomposicao_LU(transposta(matriz_Base, number_base, number_base), transposta(coeficientes, 1, number_base), number_base), number_base, 1);
 
@@ -73,7 +65,7 @@ void simplex()
             printf("%.2lf\n", lambda[0][i]);
         printf("\n");
 
-        bool    otimo = true;
+        bool    otimo              = true;
         double  custo, menor_custo = 1;
         int     variavel_entra;
 
@@ -108,7 +100,7 @@ void simplex()
 
         printf("\nVetor b:\n");
         for (int i = 0; i < number_base; i++)
-        printf("%.2lf\n", vetor_b[i][0]);
+            printf("%.2lf\n", vetor_b[i][0]);
         printf("\n");
 
         printf("\nVetor Xb:\n");
@@ -173,20 +165,16 @@ void simplex()
 
     printf("\n\tResultado:\n\n");
     for (int i = 0; i < number_base; i++)
-    {
         if (var_base[i].type == ORIGINAL)
         {
             fx+= Xb[i][0]*var_base[i].custo;
             printf("Variavel %s -> %.2lf\n", var_base[i].name, Xb[i][0]);
         }
-    }
+
     for (int i = 0; i < number_Nbase; i++)
-     {
         if (var_Nbase[i].type == ORIGINAL)
-        {
             printf("Variavel %s -> 0\n", var_Nbase[i].name);
-        }
-    }
+
     printf("\nFunção objetivo: %.2lf\n", fx);
 }
 
@@ -226,7 +214,6 @@ void calc_menor_custo(double valor, int var)
         custos[len_custos-1].variavel = var;
     }
 }
-
 
 int var_menor_custo()
 {

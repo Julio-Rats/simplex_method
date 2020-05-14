@@ -30,9 +30,7 @@ double** decomposicao_LU(double** a, double** b, int n)
 
     for (int i = 0; i < n; i++)
         for (int j = 0; j < n; j++)
-        {
             lu[i][j] = a[i][j];
-        }
 
     int vpermut[n];
     for (int i = 0; i < n; i++)
@@ -79,16 +77,6 @@ double** decomposicao_LU(double** a, double** b, int n)
         }
     }
 
-    // for (int i = 0; i < n; i++)
-    // {
-    //     printf("\n");
-    //     for (int j = 0; j < n; j++)
-    //         printf("%.2lf\t", lu[i][j]);
-    // }
-    // printf("\n");
-
-    //----------------//
-
     double b_permut[n][1];
 
     for (int i = 0; i < n; i++)
@@ -107,10 +95,6 @@ double** decomposicao_LU(double** a, double** b, int n)
 
         y[i] = b_permut[i][0] - soma;
     }
-
-    // printf("\n");
-    // for (int i = 0; i < n; i++)
-    //     printf("%.2f\n", y[i]);
 
     double** x = (double**) malloc(sizeof(double*)*n);
     if (!x)
@@ -138,11 +122,6 @@ double** decomposicao_LU(double** a, double** b, int n)
 
         x[i][0] = (y[i]-soma)/lu[i][i];
     }
-
-    //
-    // printf("\n");
-    // for (int i = 0; i < n; i++)
-    //     printf("%.2lf\n", x[i][0]);
 
     return x;
 }
@@ -195,9 +174,7 @@ double** multi_escalar(double** matriz, double escalar, int m, int n)
 
       for (int i = 0; i < m; i++)
           for (int j = 0; j < n; j++)
-          {
               c[i][j] = escalar*matriz[i][j];
-          }
 
       return c;
 }
