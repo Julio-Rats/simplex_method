@@ -1,53 +1,38 @@
-#include "simplex.h"
+#include "input.h"
 
 
 int main(int argc, char const *argv[]) {
 
-  srand(time(NULL));
-  simplex();
+    srand(time(NULL));
+    input_file("teste.txt");
 
-  //
-  // int m = 3;
-  // int n = 3;
-  // int r = 1;
-  //
-  // double** a = (double**) malloc(sizeof(double*)*m);
-  // for (size_t i = 0; i < m; i++)
-  //     a[i] = (double*) malloc(sizeof(double)*n);
-  //
-  // double** b = (double**) malloc(sizeof(double*)*n);
-  // for (size_t i = 0; i < n; i++)
-  //     b[i] = (double*) malloc(sizeof(double)*r);
-  //
-  // a[0][0] = 1;
-  // a[1][0] = 0;
-  // a[2][0] = 0;
-  //
-  // a[0][1] = 0;
-  // a[1][1] = 1;
-  // a[2][1] = 0;
-  //
-  // a[0][2] = 0;
-  // a[1][2] = 0;
-  // a[2][2] = 1;
-  //
-  // b[0][0] = 1;
-  // b[1][0] = 1;
-  // b[2][0] = 0;
-  //
-  //
-  // double** c = decomposicao_LU(a, b, n);
-  // c = decomposicao_LU(a, b, n);
-  // c = decomposicao_LU(a, b, n);
-  // c = decomposicao_LU(a, b, n);
-  //
-  // for (int i = 0; i < m; i++)
-  // {
-  //    printf("\n");
-  //    for (int j = 0; j < r; j++)
-  //        printf("%.2lf\t", c[i][j]);
-  // }
-  // printf("\n");
+    simplex();
 
-  return 0;
+    // printf("Basicas\n\n");
+    // for (int i = 0; i < number_base; i++)
+    // {
+    //     printf("%s: ", var_base[i].name);
+    //     for (int j = 0; j < number_base; j++)
+    //     {
+    //         printf("%.2lf ",var_base[i].aj[0][j]);
+    //     }
+    //     printf("\n");
+    // }
+    // printf("\nNAO Basicas\n\n");
+    // for (int i = 0; i < number_Nbase; i++)
+    // {
+    //     printf("%s: ", var_Nbase[i].name);
+    //     for (int j = 0; j < number_base; j++)
+    //     {
+    //         printf("%.2lf ",var_Nbase[i].aj[0][j]);
+    //     }
+    //     printf("\n");
+    // }
+    // printf("\n");
+    //
+    // for (int i = 0; i < number_base; i++)
+    //     printf("b[%d]: %.2lf\n", i, vetor_b[i][0]);
+
+
+    return 0;
 }
