@@ -6,112 +6,13 @@ int       len_custos = 0;
 void simplex()
 {
 
-    number_base  = 3;
-    number_Nbase = 2;
-
-    double**   lambda = NULL;
-    double**   Xb;
-    double**   vetor_y;
+    double**   lambda  = NULL;
+    double**   Xb      = NULL;
+    double**   vetor_y = NULL;
     double**   coeficientes = (double**) malloc(sizeof(double*));
-        coeficientes[0] = (double*) malloc(sizeof(double)*number_base);
+            coeficientes[0] = (double*) malloc(sizeof(double)*number_base);
 
     matriz_Base = (double**) malloc(sizeof(double*)*number_base);
-    // matriz_Base = (double**) malloc(sizeof(double*)*number_base);
-    // for (int i = 0; i < number_base; i++)
-    //     matriz_Base[i] = (double*) malloc(sizeof(double)*number_base);
-
-    // matriz_Base[0][0] = 1;
-    // matriz_Base[1][0] = 0;
-    // matriz_Base[2][0] = 0;
-    //
-    // matriz_Base[0][1] = 0;
-    // matriz_Base[1][1] = 1;
-    // matriz_Base[2][1] = 0;
-    //
-    // matriz_Base[0][2] = 0;
-    // matriz_Base[1][2] = 0;
-    // matriz_Base[2][2] = 1;
-
-    vetor_b = (double**) malloc(sizeof(double*)*number_base);
-    for (int i = 0; i < number_base; i++)
-        vetor_b[i] = (double*) malloc(sizeof(double));
-
-    vetor_b[0][0] = 6;
-    vetor_b[1][0] = 4;
-    vetor_b[2][0] = 4;
-    // vetor_b[3][0] = 18;
-
-    double** y = (double**) malloc(sizeof(double*));
-        y[0] = (double*) malloc(sizeof(double)*number_base);
-
-    y[0][0] = 1;
-    y[0][1] = 1;
-    y[0][2] = -1;
-    // y[0][3] = 5;
-
-    variavel_t v1 = {-1,"x1",ORIGINAL,y};
-
-    y = (double**) malloc(sizeof(double*));
-        y[0] = (double*) malloc(sizeof(double)*number_base);
-
-    y[0][0] = 1;
-    y[0][1] = -1;
-    y[0][2] = 1;
-    // y[0][3] = 1;
-
-    variavel_t v2 = {-1,"x2",ORIGINAL,y};
-
-    y = (double**) malloc(sizeof(double*));
-        y[0] = (double*) malloc(sizeof(double)*number_base);
-
-    y[0][0] = 1;
-    y[0][1] = 0;
-    y[0][2] = 0;
-    // y[0][3] = 0;
-
-    variavel_t v3 = {0,"x3",FOLGA,y};
-
-    y = (double**) malloc(sizeof(double*));
-        y[0] = (double*) malloc(sizeof(double)*number_base);
-
-    y[0][0] = 0;
-    y[0][1] = 1;
-    y[0][2] = 0;
-    // y[0][3] = 0;
-
-    variavel_t v4 = {0,"x4",FOLGA,y};
-
-    y = (double**) malloc(sizeof(double*));
-        y[0] = (double*) malloc(sizeof(double)*number_base);
-
-    y[0][0] = 0;
-    y[0][1] = 0;
-    y[0][2] = 1;
-    // y[0][3] = 0;
-
-    variavel_t v5 = {0,"x5",FOLGA,y};
-
-    // y = (double**) malloc(sizeof(double*));
-    //     y[0] = (double*) malloc(sizeof(double)*number_base);
-    //
-    // y[0][0] = 0;
-    // y[0][1] = 0;
-    // y[0][2] = 0;
-    // y[0][3] = 1;
-    //
-    // variavel_t v6 = {0,"x6",FOLGA,y};
-
-    var_base = (variavel_t*) malloc(sizeof(variavel_t)*number_base);
-
-    var_base[0] = v3;
-    var_base[1] = v4;
-    var_base[2] = v5;
-    // var_base[3] = v6;
-
-    var_Nbase = (variavel_t*) malloc(sizeof(variavel_t)*number_Nbase);
-
-    var_Nbase[0] = v1;
-    var_Nbase[1] = v2;
 
     int iter = 1;
 
@@ -196,7 +97,10 @@ void simplex()
             }
         }
         if (!otimo)
+        {
             variavel_entra = var_menor_custo(custos, len_custos);
+            printf("\nVariavel escolhida pra Entrar %s\n", var_Nbase[variavel_entra].name);
+        }
 
         Xb  = decomposicao_LU(matriz_Base, vetor_b, number_base);
 
@@ -212,8 +116,8 @@ void simplex()
 
         if (otimo)
         {
-          printf("Otimo\n");
-          break;
+            printf("Otimo\n");
+            break;
         }
 
         vetor_y = decomposicao_LU(matriz_Base, transposta(var_Nbase[variavel_entra].aj, 1, number_base), number_base);
@@ -260,6 +164,7 @@ void simplex()
         variavel_t aux = var_Nbase[variavel_entra];
         var_Nbase[variavel_entra] = var_base[variavel_sai];
         var_base[variavel_sai] = aux;
+        char a = getc(stdin);
     }
 
     double fx=0; // valor função objetivo

@@ -25,10 +25,10 @@ typedef struct
     double**    aj;         // Coluna com suas restrições.
 }variavel_t;
 
-u_int16_t    number_base;    // Dimensão da matriz basica (B).
-u_int16_t    number_Nbase;   // Dimensão da matriz não basica (N).
-double**     vetor_b;        // Vetor B
-variavel_t*  var_base;       // Variveis basicas.
-variavel_t*  var_Nbase;      // Variveis não basicas.
+extern u_int16_t    number_base;    // Dimensão da matriz basica (B).
+extern u_int16_t    number_Nbase;   // Dimensão da matriz não basica (N).
+extern double**     vetor_b;        // Vetor B
+extern variavel_t*  var_base;       // Variveis basicas.
+extern variavel_t*  var_Nbase;      // Variveis não basicas.
 
 #endif
