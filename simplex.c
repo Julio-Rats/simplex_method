@@ -64,7 +64,9 @@ void simplex()
         }
         printf("\n\n");
 
-        lambda = multi_matriz(coeficientes, matriz_Base, 1, number_base, number_base);
+        // lambda = multi_matriz(coeficientes, matriz_Base, 1, number_base, number_base);
+
+        lambda = transposta(decomposicao_LU(transposta(matriz_Base, number_base, number_base), transposta(coeficientes, 1, number_base), number_base), number_base, 1);
 
         printf("LAMBDA:\n");
         for (int i = 0; i < number_base; i++)
