@@ -647,7 +647,7 @@ void maior_igual()
         vetor_aux[0][number_base-1] = 1;
 
         static u_int16_t number_artif = 1;
-        variavel_t aux = {(double)(BIGM), random_var("artif", number_artif++), ARTIFICIAL, vetor_aux};
+        variavel_t aux = {(double)(sinal*BIGM), random_var("artif", number_artif++), ARTIFICIAL, vetor_aux};
         var_base[number_base-1]   = aux;
 
         if (number_Nbase == 0)
