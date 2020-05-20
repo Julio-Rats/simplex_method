@@ -75,7 +75,7 @@ void simplex()
             custos = NULL;
             len_custos = 0;
         }
-
+        sort = 0;
         for (int i = 0; i < number_Nbase; i++)
         {
             custo = var_Nbase[i].custo - multi_matriz(lambda, transposta(var_Nbase[i].aj, 1, number_base), 1, number_base, 1)[0][0];
@@ -83,20 +83,13 @@ void simplex()
             if (custo < 0)
             {
                otimo = false;
-               if (custo < menor_custo)
+               if (custo <= menor_custo)
                {
                     menor_custo = custo;
-                    variavel_entra = i;
-                    // calc_menor_custo(custo, i);
+                    calc_menor_custo(custo, i);
                }
             }
         }
-        // if (!otimo)
-        // {
-        //     variavel_entra = var_menor_custo(custos, len_custos);
-        //     printf("\nVariavel escolhida pra Entrar %s\n", var_Nbase[variavel_entra].name);
-        // }
-
         Xb      = decomposicao_LU(matriz_Base, vetor_b, number_base);
 
         printf("\nVetor b:\n");
@@ -110,46 +103,48 @@ void simplex()
         printf("\n");
 
         if (otimo)
-        {
-            printf("Otimo\n");
-            break;
-        }
-
-        vetor_y = decomposicao_LU(matriz_Base, transposta(var_Nbase[variavel_entra].aj, 1, number_base), number_base);
-
-        printf("Vetor Y:\n");
-        for (int i = 0; i < number_base; i++)
-            printf("%.2lf\n", vetor_y[i][0]);
-        printf("\n");
+           break;
 
         bool   ilimitada = true;
         double passo, menor_passo;
         int    variavel_sai;
+        do{
+            variavel_entra = var_menor_custo();
 
-        for (int i = 0; i < number_base; i++)
-            if (vetor_y[i][0] > 0)
+            if (variavel_entra == -1)
             {
-                passo = (Xb[i][0])/(vetor_y[i][0]);
-                if (ilimitada) // primeira verificação
-                {
-                    menor_passo = passo;
-                    variavel_sai = i;
-                    ilimitada = false;
-                    continue;
-                }
-                if (passo < menor_passo)
-                {
-                    menor_passo = passo;
-                    variavel_sai = i;
-                }
+                printf("\n\tSolução ILIMITADA\n\n");
+                exit(0);
             }
 
+            vetor_y = decomposicao_LU(matriz_Base, transposta(var_Nbase[variavel_entra].aj, 1, number_base), number_base);
 
-        if (ilimitada)
-        {
-            printf("\n Solução ILIMITADA\n\n");
-            exit(0);
-        }
+            for (int i = 0; i < number_base; i++)
+                if (vetor_y[i][0] > 0)
+                {
+                    passo = (Xb[i][0])/(vetor_y[i][0]);
+                    if (ilimitada) // primeira verificação
+                    {
+                        menor_passo = passo;
+                        variavel_sai = i;
+                        ilimitada = false;
+                        continue;
+                    }
+                    if (passo < menor_passo)
+                    {
+                        menor_passo = passo;
+                        variavel_sai = i;
+                    }
+                }
+                printf("Escolhido: %s\n", var_Nbase[variavel_entra].name);
+                printf("Vetor Y:\n");
+                for (int i = 0; i < number_base; i++)
+                printf("%.2lf\n", vetor_y[i][0]);
+                printf("\n");
+                if (ilimitada)
+                   printf("não achou nenhum Y positivo\n\n");
+        }while(ilimitada);
+
 
         printf("\nEntra = %s, Sai = %s\n", var_Nbase[variavel_entra].name, var_base[variavel_sai].name);
         printf("custo %.2lf, Variavel %s entra na base\n\n", menor_custo, var_Nbase[variavel_entra].name);
@@ -171,19 +166,20 @@ void simplex()
             exit(0);
         }
 
+    printf("Otimo encontrado\n");
     printf("\n\tResultado:\n\n");
     for (int i = 0; i < number_base; i++)
         if (var_base[i].type == ORIGINAL)
         {
             fx+= Xb[i][0]*var_base[i].custo;
-            printf("Variavel %s -> %.2lf\n", var_base[i].name, Xb[i][0]);
+            printf("\tVariavel %s -> %.2lf\n", var_base[i].name, Xb[i][0]);
         }
 
     for (int i = 0; i < number_Nbase; i++)
         if (var_Nbase[i].type == ORIGINAL)
-            printf("Variavel %s -> 0\n", var_Nbase[i].name);
+            printf("\tVariavel %s -> 0\n", var_Nbase[i].name);
 
-    printf("\nFunção objetivo: %.2lf\n", fx);
+    printf("\n\tFunção objetivo: %.2lf\n\n", fx);
 }
 
 void calc_menor_custo(double valor, int var)
@@ -225,6 +221,8 @@ void calc_menor_custo(double valor, int var)
 
 int var_menor_custo()
 {
-    int pos_sorte = rand()%len_custos;
-    return custos[pos_sorte].variavel;
+    if (sort < len_custos)
+        return custos[sort++].variavel;
+    else
+        return -1;
 }

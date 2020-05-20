@@ -9,7 +9,8 @@ typedef struct
     int    variavel;
 }custo_t;
 
-double**  matriz_Base;   //  Matriz com as aj colunas de A, das j variaveis basicas.
+static int  sort = 0;
+double**    matriz_Base;   //  Matriz com as aj colunas de A, das j variaveis basicas.
 
 void      simplex();
 void      calc_menor_custo(double valor, int var);
