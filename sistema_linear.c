@@ -12,7 +12,7 @@ double** decomposicao_LU(double** a, double** b, int n)
     double pivo, escalar, soma;
     int    l_pivo, aux;
 
-    double** lu = (double**) calloc(n,sizeof(double*));
+    double** lu = (double**) calloc(n, sizeof(double*));
     if (!lu)
     {
         printf("Erro alocação matriz\n");
@@ -20,7 +20,7 @@ double** decomposicao_LU(double** a, double** b, int n)
     }
     for (int i = 0; i < n; i++)
     {
-        lu[i] = (double*) calloc(n,sizeof(double));
+        lu[i] = (double*) calloc(n, sizeof(double));
         if (!lu[i])
         {
             printf("Erro alocação matriz\n");
@@ -33,6 +33,7 @@ double** decomposicao_LU(double** a, double** b, int n)
             lu[i][j] = a[i][j];
 
     int vpermut[n];
+
     for (int i = 0; i < n; i++)
         vpermut[i] = i;
 
@@ -52,7 +53,6 @@ double** decomposicao_LU(double** a, double** b, int n)
             printf("[ERRO]: Matriz singular, sistema não possivel determinado\n");
             exit(7);
         }
-
 
         if (l_pivo != k)
         {
@@ -90,13 +90,13 @@ double** decomposicao_LU(double** a, double** b, int n)
     for (int i = 0; i < n; i++)
     {
         soma = 0;
-        for (int j = 0; j < (n-1); j++)
+        for (int j = 0; j <= (i-1); j++)
             soma += (lu[i][j]*y[j]);
 
         y[i] = b_permut[i][0] - soma;
     }
 
-    double** x = (double**) malloc(sizeof(double*)*n);
+    double** x = (double**) malloc(n*sizeof(double*));
     if (!x)
     {
         printf("erro malloc\n");
@@ -113,12 +113,11 @@ double** decomposicao_LU(double** a, double** b, int n)
         }
     }
 
-    for (int i = (n-1); i > -1; i--)
+    for (int i = (n-1); i >= 0; i--)
     {
         soma = 0;
         for (int j = (i+1); j < n; j++)
             soma += (lu[i][j]*x[j][0]);
-
 
         x[i][0] = (y[i]-soma)/lu[i][i];
     }
@@ -148,7 +147,7 @@ double** multi_matriz(double** a, double** b, int m, int n, int r)
       for (int i = 0; i < m; i++)
           for (int k = 0; k < r; k++)
               for (int j = 0; j < n; j++)
-                  c[i][k] += a[i][j]*b[j][k];
+                  c[i][k] += a[i][j]*(b[j][k]);
 
       return c;
 }
