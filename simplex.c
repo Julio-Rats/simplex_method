@@ -42,6 +42,7 @@ void simplex()
         }
 
         matriz_Base = transposta(matriz_Base, number_base, number_base);
+        lambda = transposta(decomposicao_LU(transposta(matriz_Base, number_base, number_base), transposta(coeficientes, 1, number_base), number_base), number_base, 1);
 
         printf("Coeficientes Basicos:\n");
         for (int j = 0; j < number_base; j++)
@@ -58,7 +59,6 @@ void simplex()
         }
         printf("\n\n");
 
-        lambda = transposta(decomposicao_LU(transposta(matriz_Base, number_base, number_base), transposta(coeficientes, 1, number_base), number_base), number_base, 1);
 
         printf("LAMBDA:\n");
         for (int i = 0; i < number_base; i++)
@@ -83,20 +83,21 @@ void simplex()
             if (custo < 0)
             {
                otimo = false;
-               if (custo <= menor_custo)
+               if (custo < menor_custo)
                {
                     menor_custo = custo;
-                    calc_menor_custo(custo, i);
+                    variavel_entra = i;
+                    // calc_menor_custo(custo, i);
                }
             }
         }
-        if (!otimo)
-        {
-            variavel_entra = var_menor_custo(custos, len_custos);
-            printf("\nVariavel escolhida pra Entrar %s\n", var_Nbase[variavel_entra].name);
-        }
+        // if (!otimo)
+        // {
+        //     variavel_entra = var_menor_custo(custos, len_custos);
+        //     printf("\nVariavel escolhida pra Entrar %s\n", var_Nbase[variavel_entra].name);
+        // }
 
-        Xb  = decomposicao_LU(matriz_Base, vetor_b, number_base);
+        Xb      = decomposicao_LU(matriz_Base, vetor_b, number_base);
 
         printf("\nVetor b:\n");
         for (int i = 0; i < number_base; i++)
@@ -162,6 +163,13 @@ void simplex()
     }
 
     double fx=0; // valor função objetivo
+
+    for (int i = 0; i < number_base; i++)
+        if (var_base[i].type == ARTIFICIAL)
+        {
+            printf("\nVariavel Artificial na base, problema infactivel\n");
+            exit(0);
+        }
 
     printf("\n\tResultado:\n\n");
     for (int i = 0; i < number_base; i++)

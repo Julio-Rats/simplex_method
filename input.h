@@ -49,5 +49,6 @@ void       escalar_restrict(int sinal_var);
 void       variavel_restrict(double escalar);
 void       menor_igual();
 void       maior_igual();
+void       igual();
 
 #endif

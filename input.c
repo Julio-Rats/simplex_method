@@ -378,10 +378,12 @@ void proxima_restrict()
           escalar_restrict(1);
     else if (token.type == SUB)
           escalar_restrict(-1);
-    else if ((token.type == MENORIGUAL)||(token.type == IGUAL))
+    else if (token.type == MENORIGUAL)
           menor_igual();
     else if (token.type == MAIORIGUAL)
           maior_igual();
+    else if (token.type == IGUAL)
+          igual();
     else if (token.type == MULT)
     {
           printf("\n[ERRO] Sintaxe errada, esperava um escalar ou uma variavel, porém foi recebido %s\n\n", token.value);
@@ -583,6 +585,53 @@ void maior_igual()
         exit(1);
     }
     line();
+}
+
+void igual()
+{
+      token = get_token();
+      if (token.type == NUM)
+      {
+          for (int i = 0; i < number_base; i++)
+          {
+              var_base[i].aj[0] = (double*) realloc(var_base[i].aj[0], sizeof(double)*(number_base+1));
+              var_base[i].aj[0][number_base] = 0;
+          }
+
+          for (int i = 0; i < number_Nbase; i++)
+          {
+              var_Nbase[i].aj[0] = (double*) realloc(var_Nbase[i].aj[0], sizeof(double)*(number_base+1));
+              var_Nbase[i].aj[0][number_base] = 0;
+          }
+
+          if (number_base == 0)
+          {
+              var_base       = (variavel_t*) malloc(sizeof(variavel_t)*(++number_base));
+              vetor_b        = (double**)    malloc(sizeof(double*)*(number_base));
+              vetor_b[0]     = (double*)     malloc(sizeof(double));
+          }else{
+              var_base       = (variavel_t*) realloc(var_base, sizeof(variavel_t)*(++number_base));
+              vetor_b        = (double**)    realloc(vetor_b, sizeof(double*)*(number_base));
+              vetor_b[number_base-1]  = (double*)  malloc(sizeof(double));
+          }
+          vetor_b[number_base-1][0] = (double)atof(token.value);
+
+          double** vetor_aux = (double**) malloc(sizeof(double*));
+          vetor_aux[0] = (double*) calloc(number_base, sizeof(double));
+          vetor_aux[0][number_base-1] = 1;
+
+          static u_int16_t number_artif = 1;
+          variavel_t aux = {(double)(sinal*BIGM), random_var("artif", number_artif++), ARTIFICIAL, vetor_aux};
+          var_base[number_base-1]   = aux;
+
+      }
+      token = get_token();
+      if (token.type != NL)
+      {
+          printf("\n[ERRO] Sintaxe errada, esperava uma nova linha de restrição, porém foi recebido %s\n\n", token.value);
+          exit(1);
+      }
+      line();
 }
 
 void uniao_var()
