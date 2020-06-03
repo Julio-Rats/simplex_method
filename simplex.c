@@ -90,7 +90,8 @@ void simplex()
                }
             }
         }
-        Xb      = decomposicao_LU(matriz_Base, vetor_b, number_base);
+
+        Xb = decomposicao_LU(matriz_Base, vetor_b, number_base);
 
         printf("\nVetor b:\n");
         for (int i = 0; i < number_base; i++)

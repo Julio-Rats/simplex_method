@@ -5,7 +5,7 @@
 #include <string.h>
 #include <float.h>
 
-#define  BIGM   1000000
+#define  BIGM   10000
 
 typedef enum
 {
