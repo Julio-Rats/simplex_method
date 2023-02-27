@@ -1,57 +1,51 @@
 #include "sistema_linear.h"
 
-double modulo(double valor)
-{
-      if (valor >= 0)
-          return valor;
-      return (-valor);
-}
 
-double** decomposicao_LU(double** a, double** b, int n)
+/* 
+    Local Function
+*/
+double **multi_escalar(double **matriz, double escalar, size_t m, size_t n);
+
+double** decomposicao_LU(double** a, double** b, size_t n)
 {
     double pivo, escalar, soma;
-    int    l_pivo, aux;
-
-    double** lu = (double**) calloc(n, sizeof(double*));
+    size_t l_pivo, aux;
+    size_t vpermut[n];
+    
+    double** lu = (double**) malloc(n * sizeof(double*));
     if (!lu)
     {
-        printf("Erro alocaÃ§Ã£o matriz\n");
-        exit(1);
+        printf("Erro alocação matriz\n");
+        exit(EXIT_FAILURE);
     }
-    for (int i = 0; i < n; i++)
+    for (size_t i = 0; i < n; i++)
     {
         lu[i] = (double*) calloc(n, sizeof(double));
         if (!lu[i])
         {
-            printf("Erro alocaÃ§Ã£o matriz\n");
-            exit(1);
+            printf("Erro alocacão matriz\n");
+            exit(EXIT_FAILURE);
         }
+        memcpy(lu[i], a[i], n * sizeof(double));
+        vpermut[i] = i;
     }
 
-    for (int i = 0; i < n; i++)
-        for (int j = 0; j < n; j++)
-            lu[i][j] = a[i][j];
 
-    int vpermut[n];
-
-    for (int i = 0; i < n; i++)
-        vpermut[i] = i;
-
-    for (int k = 0; k < (n-1); k++)
+    for (size_t k = 0; k < (n-1); k++)
     {
         pivo = lu[k][k];
         l_pivo = k;
-        for (int i = (k+1); i < n; i++)
-            if(modulo(lu[i][k]) > modulo(pivo))
+        for (size_t i = (k+1); i < n; i++)
+            if(fabs(lu[i][k]) > fabs(pivo))
             {
                 pivo = lu[i][k];
                 l_pivo = i;
             }
 
-        if (pivo == 0)
+        if (fabs(pivo) < 1e-6)
         {
-            printf("[ERRO]: Matriz singular, sistema nÃ£o possivel determinado\n");
-            exit(7);
+            printf("[ERRO]: Matriz singular, sistema não possivel !\n");
+            exit(EXIT_FAILURE);
         }
 
         if (l_pivo != k)
@@ -68,21 +62,21 @@ double** decomposicao_LU(double** a, double** b, int n)
             }
         }
 
-        for (int i = (k+1); i < n; i++)
+        for (size_t i = (k+1); i < n; i++)
         {
             escalar = lu[i][k]/lu[k][k];
             lu[i][k] = escalar;
-            for (int j = (k+1); j < n; j++)
+            for (size_t j = (k+1); j < n; j++)
                 lu[i][j] -= (escalar*lu[k][j]);
         }
     }
 
-    double b_permut[n][1];
+    double b_permut[n];
 
-    for (int i = 0; i < n; i++)
+    for (size_t i = 0; i < n; i++)
     {
         aux = vpermut[i];
-        b_permut[i][0] = b[aux][0];
+        b_permut[i] = b[aux][0];
     }
 
     double y[n];
@@ -93,30 +87,30 @@ double** decomposicao_LU(double** a, double** b, int n)
         for (int j = 0; j <= (i-1); j++)
             soma += (lu[i][j]*y[j]);
 
-        y[i] = b_permut[i][0] - soma;
+        y[i] = b_permut[i] - soma;
     }
 
     double** x = (double**) malloc(n*sizeof(double*));
     if (!x)
     {
         printf("erro malloc\n");
-        exit(3);
+        exit(EXIT_FAILURE);
     }
 
-    for (int i = 0; i < n ; i++)
+    for (size_t i = 0; i < n ; i++)
     {
-        x[i] = (double*) malloc(sizeof(double));
+        x[i] = (double*) calloc(1, sizeof(double));
         if (!x[i])
         {
             printf("erro malloc\n");
-            exit(3);
+            exit(EXIT_FAILURE);
         }
     }
 
     for (int i = (n-1); i >= 0; i--)
     {
         soma = 0;
-        for (int j = (i+1); j < n; j++)
+        for (size_t j = (i+1); j < n; j++)
             soma += (lu[i][j]*x[j][0]);
 
         x[i][0] = (y[i]-soma)/lu[i][i];
@@ -125,79 +119,78 @@ double** decomposicao_LU(double** a, double** b, int n)
     return x;
 }
 
-double** multi_matriz(double** a, double** b, int m, int n, int r)
+double** multi_matriz(double** a, double** b, size_t m, size_t n, size_t r)
 {
       double** c = (double**) calloc(m,sizeof(double*));
       if (!c)
       {
-          printf("Erro alocaÃ§Ã£o matriz\n");
-          exit(1);
+          printf("Erro alocacão matriz\n");
+          exit(EXIT_FAILURE);
       }
-      for (int i = 0; i < m; i++)
+      for (size_t i = 0; i < m; i++)
       {
           c[i] = (double*) calloc(r,sizeof(double));
           if (!c[i])
           {
-              printf("Erro alocaÃ§Ã£o matriz\n");
-              exit(1);
+              printf("Erro alocacão matriz\n");
+              exit(EXIT_FAILURE);
           }
       }
 
-
-      for (int i = 0; i < m; i++)
-          for (int k = 0; k < r; k++)
-              for (int j = 0; j < n; j++)
+      for (size_t i = 0; i < m; i++)
+          for (size_t k = 0; k < r; k++)
+              for (size_t j = 0; j < n; j++)
                   c[i][k] += a[i][j]*(b[j][k]);
 
       return c;
 }
 
 
-double** multi_escalar(double** matriz, double escalar, int m, int n)
+double** multi_escalar(double** matriz, double escalar, size_t m, size_t n)
 {
       double** c = (double**) calloc(m,sizeof(double*));
       if (!c)
       {
-          printf("Erro alocaÃ§Ã£o matriz\n");
-          exit(1);
+          printf("Erro alocacão matriz\n");
+          exit(EXIT_FAILURE);
       }
-      for (int i = 0; i < m; i++)
+      for (size_t i = 0; i < m; i++)
       {
           c[i] = (double*) calloc(n,sizeof(double));
           if (!c[i])
           {
-              printf("Erro alocaÃ§Ã£o matriz\n");
-              exit(1);
+              printf("Erro alocacão matriz\n");
+              exit(EXIT_FAILURE);
           }
       }
 
-      for (int i = 0; i < m; i++)
-          for (int j = 0; j < n; j++)
+      for (size_t i = 0; i < m; i++)
+          for (size_t j = 0; j < n; j++)
               c[i][j] = escalar*matriz[i][j];
 
       return c;
 }
 
-double**  transposta(double** matriz, int m, int n)
+double**  transposta(double** matriz, size_t m, size_t n)
 {
       double** transposta = (double**) calloc(n,sizeof(double*));
       if (!transposta)
       {
-          printf("Erro alocaÃ§Ã£o matriz\n");
-          exit(1);
+          printf("Erro alocacão matriz\n");
+          exit(EXIT_FAILURE);
       }
-      for (int i = 0; i < n; i++)
+      for (size_t i = 0; i < n; i++)
       {
           transposta[i] = (double*) calloc(m,sizeof(double));
           if (!transposta[i])
           {
-              printf("Erro alocaÃ§Ã£o matriz\n");
-              exit(1);
+              printf("Erro alocacão matriz\n");
+              exit(EXIT_FAILURE);
           }
       }
 
-      for (int i = 0; i < m; i++)
-          for (int j = 0; j < n; j++)
+      for (size_t i = 0; i < m; i++)
+          for (size_t j = 0; j < n; j++)
               transposta[j][i] = matriz[i][j];
 
       return transposta;
