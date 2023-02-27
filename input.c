@@ -4,13 +4,13 @@
 	Global Variables
 */
 
-variavel_t *list_var = NULL;  // Vetor auxiliar para ler restrições
-size_t len_var = 0;			  // Length do vetor list_var.
-size_t number_base = 0;		  // Dimensão da matriz basica (B).
-size_t number_Nbase = 0;	  // Dimensão da matriz n?o basica (N).
-double **vetor_b = NULL;	  // Vetor B.
-variavel_t *var_base = NULL;  // Variveis basicas.
-variavel_t *var_Nbase = NULL; // Variveis não basicas.
+variavel_t *list_var = NULL;	// Vetor auxiliar para ler restrições
+size_t len_var = 0;				// Length do vetor list_var.
+size_t number_base = 0;			// Dimensão da matriz basica (B).
+size_t number_Nbase = 0;		// Dimensão da matriz n?o basica (N).
+double **vetor_b = NULL;		// Vetor B.
+variavel_t *var_base = NULL;	// Variveis basicas.
+variavel_t *var_Nbase = NULL;	// Variveis não basicas.
 int sinal;
 
 /*
