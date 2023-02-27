@@ -7,7 +7,8 @@
 
 int main(int argc, char const *argv[])
 {
-    setlocale(LC_ALL, "Portuguese");
+    setlocale(LC_NUMERIC, "Portuguese");
+    setlocale(LC_CTYPE, "Portuguese");
     srand(time(NULL));
     input_file("teste.txt");
     simplex();

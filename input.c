@@ -31,14 +31,14 @@ string random_var(string prefixo, size_t index);
 token_t get_token();
 void strlower(string str);
 void uniao_var();
-void objetivo();
-void funcao();
-void proxima();
-void escalar(int sinal_var);
-void variavel(double escalar);
+void tipo_otimizacao();
+void funcao_objetivo();
 void restricao();
+void proxima();
+void operacao(int sinal_var);
+void variavel(double escalar);
 void line();
-void proxima_restrict();
+void continua_restrict();
 void escalar_restrict(int sinal_var);
 void variavel_restrict(double escalar);
 void menor_igual();
@@ -118,7 +118,7 @@ token_t get_token()
 			}
 			else if (char_atual == '\n')
 			{
-				strcpy(token.value, "NL");
+				strcpy(token.value, "(Nova Linha)");
 				token.type = NL;
 				break;
 			}
@@ -143,9 +143,9 @@ token_t get_token()
 			{
 				token.value[length_char++] = char_atual;
 			}
-			else if (char_atual == '.')
+			else if ((char_atual == '.') || (char_atual == ','))
 			{
-				token.value[length_char++] = char_atual;
+				token.value[length_char++] = ',';
 				state_atual = DNUM_O;
 			}
 			else
@@ -177,7 +177,7 @@ token_t get_token()
 			{
 				token.value[length_char++] = char_atual;
 			}
-			else if (char_atual == '.')
+			else if ((char_atual == '.') || (char_atual == ','))
 			{
 				token.value[length_char++] = char_atual;
 				token.value[length_char] = '\0';
@@ -229,6 +229,7 @@ token_t get_token()
 		if (feof(arq))
 		{
 			token.type = EF;
+			strcpy(token.value,"(Final de Arquivo)");
 			break;
 		}
 	}
@@ -242,8 +243,8 @@ void input_file(string path_file)
 		printf("\n[ERRO] Falha ao tentar abrir o arquivo: %s\n\n", path_file);
 		exit(EXIT_FAILURE);
 	}
-	objetivo();
-	funcao();
+	tipo_otimizacao();
+	funcao_objetivo();
 	restricao();
 	for (size_t i = 0; i < len_var; i++)
 		if (list_var[i].aj == NULL)
@@ -255,7 +256,7 @@ void input_file(string path_file)
 	fclose(arq);
 }
 
-void objetivo()
+void tipo_otimizacao()
 {
 	token = get_token();
 	if (token.type == VAR)
@@ -279,20 +280,20 @@ void objetivo()
 	}
 	else if (token.type == NL)
 	{
-		objetivo();
+		tipo_otimizacao();
 		return;
 	}
 	printf("\n[ERRO] Sintaxe errada, esperava min ou max, porém foi recebido '%s'\n\n", token.value);
 	exit(EXIT_FAILURE);
 }
 
-void funcao()
+void funcao_objetivo()
 {
 	token = get_token();
 	if (token.type == SOMA)
-		escalar(1);
+		operacao(1);
 	else if (token.type == SUB)
-		escalar(-1);
+		operacao(-1);
 	else if (token.type == NUM)
 		variavel(atof(token.value));
 	else if (token.type == VAR)
@@ -321,17 +322,17 @@ void proxima()
 {
 	token = get_token();
 	if (token.type == SOMA)
-		escalar(1);
+		operacao(1);
 	else if (token.type == SUB)
-		escalar(-1);
-	else if ((token.type == MULT) || (token.type == VAR))
+		operacao(-1);
+	else if (token.type != NL)
 	{
 		printf("\n[ERRO] Sintaxe errada, esperava um escalar ou uma variavel, porém foi recebido %s\n\n", token.value);
 		exit(EXIT_FAILURE);
 	}
 }
 
-void escalar(int sinal_var)
+void operacao(int sinal_var)
 {
 	token = get_token();
 	if (token.type == NUM)
@@ -436,10 +437,8 @@ void restricao()
 
 			list_var[len_var - 1] = aux;
 		}
-		proxima_restrict();
+		continua_restrict();
 	}
-	else if (token.type == NL)
-		line();
 }
 
 void line()
@@ -488,13 +487,13 @@ void line()
 
 				list_var[len_var - 1] = aux;
 			}
-			proxima_restrict();
+			continua_restrict();
 		}
 		else if (token.type == NL)
 			line();
 }
 
-void proxima_restrict()
+void continua_restrict()
 {
 	token = get_token();
 	if (token.type == SOMA)
@@ -515,6 +514,11 @@ void proxima_restrict()
 	else if (token.type == VAR)
 	{
 		printf("\n[ERRO] Sintaxe errada, esperava um escalar ou uma variavel, porém foi recebido %s\n\n", token.value);
+		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		printf("\n[ERRO] Sintaxe errada, esperava uma variavel ou sinal ou simbolo de equação ou inequação, porém foi recebido '%s'\n\n", token.value);
 		exit(EXIT_FAILURE);
 	}
 }
@@ -559,7 +563,7 @@ void escalar_restrict(int sinal_var)
 			strcpy(aux.name, token.value);
 			list_var[len_var - 1] = aux;
 		}
-		proxima_restrict();
+		continua_restrict();
 	}
 	else
 	{
@@ -610,7 +614,7 @@ void variavel_restrict(double escalar)
 
 			list_var[len_var - 1] = aux;
 		}
-		proxima_restrict();
+		continua_restrict();
 	}
 	else
 	{
@@ -651,6 +655,12 @@ void menor_igual()
 		variavel_t aux = {0, random_var("folga", number_folga++), FOLGA, vetor_aux};
 		var_base[number_base - 1] = aux;
 	}
+	else
+	{
+		printf("\n[ERRO] Sintaxe errada, esperava um valor apos o menor igual, porém foi recebido %s\n\n", token.value);
+		exit(EXIT_FAILURE);
+	}
+
 	token = get_token();
 	if (token.type != NL && token.type != EF)
 	{
@@ -710,6 +720,12 @@ void maior_igual()
 		variavel_t aux1 = {0, random_var("folgaN", number_artifN++), FOLGA, vetor_aux};
 		var_Nbase[number_Nbase - 1] = aux1;
 	}
+	else
+	{
+		printf("\n[ERRO] Sintaxe errada, esperava um valor apos o maior igual, porém foi recebido %s\n\n", token.value);
+		exit(EXIT_FAILURE);
+	}
+
 	token = get_token();
 	if (token.type != NL && token.type != EF)
 	{
@@ -757,6 +773,12 @@ void igual()
 		variavel_t aux = {(double)abs(BIGM), random_var("artif", number_artif++), ARTIFICIAL, vetor_aux};
 		var_base[number_base - 1] = aux;
 	}
+	else
+	{
+		printf("\n[ERRO] Sintaxe errada, esperava um valor apos a igualdade, porém foi recebido %s\n\n", token.value);
+		exit(EXIT_FAILURE);
+	}
+
 	token = get_token();
 	if (token.type != NL && token.type != EF)
 	{
