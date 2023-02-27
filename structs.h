@@ -18,7 +18,7 @@ typedef enum
 
 typedef struct
 {
-    double cost;    //  Custo na função objetivo (C);
+    double cost;   //  Custo na função objetivo (C);
     string name;    // Nome da variavel, ex: "x1", "x2".
     vartype_e type; // Tipo da variavel (folga ou artificial).
     double **aj;    // Coluna com suas restrições.
