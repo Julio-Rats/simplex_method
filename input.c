@@ -439,6 +439,11 @@ void restricao()
 		}
 		continua_restrict();
 	}
+	else
+	{
+		printf("\n[ERRO] Sintaxe errada, esperava uma variavel, porém foi recebido %s\n\n", token.value);
+		exit(EXIT_FAILURE);
+	}
 }
 
 void line()
@@ -490,7 +495,14 @@ void line()
 			continua_restrict();
 		}
 		else if (token.type == NL)
+		{
 			line();
+		}
+		else 
+		{
+			printf("\n[ERRO] Sintaxe errada, esperava uma variavel, porém foi recebido %s\n\n", token.value);
+			exit(EXIT_FAILURE);
+		}
 }
 
 void continua_restrict()
