@@ -135,6 +135,7 @@ void simplex()
             vetor_y = decomposicao_LU(matriz_Base, transposta(var_Nbase[variavel_entra].aj, 1, number_base), number_base);
 
             for (size_t i = 0; i < number_base; i++)
+            {
                 if (vetor_y[i][0] > 0)
                 {
                     passo = (Xb[i][0]) / (vetor_y[i][0]);
@@ -151,9 +152,14 @@ void simplex()
                         variavel_sai = i;
                     }
                 }
+                free(matriz_Base[i]);
+            }
             printf("Vetor Y:\n");
             for (size_t i = 0; i < number_base; i++)
+            {
                 printf("%.2lf\n", vetor_y[i][0]);
+                free(vetor_y[i]);
+            }
             printf("\n");
             if (ilimitada)
                 printf("não achou nenhum Y positivo\n\n");

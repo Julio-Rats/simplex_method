@@ -1,6 +1,8 @@
 #ifndef _STRUCT_
 #define _STRUCT_
 
+#include <stdlib.h>
+
 #define true 1
 #define false 0
 
