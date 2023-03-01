@@ -8,8 +8,6 @@ double **multi_escalar(double **matriz, double escalar, size_t m, size_t n);
 
 double** decomposicao_LU(double** a, double** b, size_t n)
 {
-    double pivo, escalar, soma;
-    size_t l_pivo, aux;
     size_t vpermut[n];
     
     double** lu = (double**) malloc(n * sizeof(double*));
@@ -33,8 +31,8 @@ double** decomposicao_LU(double** a, double** b, size_t n)
 
     for (size_t k = 0; k < (n-1); k++)
     {
-        pivo = lu[k][k];
-        l_pivo = k;
+        double pivo = lu[k][k];
+        size_t l_pivo = k;
         for (size_t i = (k+1); i < n; i++)
             if(fabs(lu[i][k]) > fabs(pivo))
             {
@@ -50,40 +48,37 @@ double** decomposicao_LU(double** a, double** b, size_t n)
 
         if (l_pivo != k)
         {
-            aux             = vpermut[k];
+            size_t aux      = vpermut[k];
             vpermut[k]      = vpermut[l_pivo];
             vpermut[l_pivo] = aux;
 
             for (int j = 0; j < n; j++)
             {
-                aux = lu[k][j];
-                lu[k][j] = lu[l_pivo][j];
+                double aux    = lu[k][j];
+                lu[k][j]      = lu[l_pivo][j];
                 lu[l_pivo][j] = aux;
             }
         }
 
         for (size_t i = (k+1); i < n; i++)
         {
-            escalar = lu[i][k]/lu[k][k];
-            lu[i][k] = escalar;
-            for (size_t j = (k+1); j < n; j++)
-                lu[i][j] -= (escalar*lu[k][j]);
+            double escalar = lu[i][k]/lu[k][k];
+            lu[i][k]       = escalar;
+            for (size_t j  = (k+1); j < n; j++)
+                lu[i][j]  -= (escalar*lu[k][j]);
         }
     }
 
     double b_permut[n];
 
     for (size_t i = 0; i < n; i++)
-    {
-        aux = vpermut[i];
-        b_permut[i] = b[aux][0];
-    }
+        b_permut[i] = b[vpermut[i]][0];
 
     double y[n];
 
     for (int i = 0; i < n; i++)
     {
-        soma = 0;
+        double soma = 0;
         for (int j = 0; j <= (i-1); j++)
             soma += (lu[i][j]*y[j]);
 
@@ -109,12 +104,16 @@ double** decomposicao_LU(double** a, double** b, size_t n)
 
     for (int i = (n-1); i >= 0; i--)
     {
-        soma = 0;
+        double soma = 0;
         for (size_t j = (i+1); j < n; j++)
             soma += (lu[i][j]*x[j][0]);
 
         x[i][0] = (y[i]-soma)/lu[i][i];
     }
+
+    for (size_t i = 0; i < n ; i++)
+        free(lu[i]);
+    free(lu);
 
     return x;
 }

@@ -37,8 +37,8 @@ void restricao();
 void proxima();
 void operacao(int sinal_var);
 void variavel(double escalar);
-void line();
 void continua_restrict();
+void nova_restricao();
 void escalar_restrict(int sinal_var);
 void variavel_restrict(double escalar);
 void menor_igual();
@@ -446,7 +446,7 @@ void restricao()
 	}
 }
 
-void line()
+void nova_restricao()
 {
 	token = get_token();
 	if (token.type != EF)
@@ -496,7 +496,7 @@ void line()
 		}
 		else if (token.type == NL)
 		{
-			line();
+			nova_restricao();
 		}
 		else 
 		{
@@ -679,7 +679,7 @@ void menor_igual()
 		printf("\n[ERRO] Sintaxe errada, esperava uma nova linha de restrição, porém foi recebido %s\n\n", token.value);
 		exit(EXIT_FAILURE);
 	}
-	line();
+	nova_restricao();
 }
 
 void maior_igual()
@@ -744,7 +744,7 @@ void maior_igual()
 		printf("\n[ERRO] Sintaxe errada, esperava uma nova linha de restrição, porém foi recebido %s\n\n", token.value);
 		exit(EXIT_FAILURE);
 	}
-	line();
+	nova_restricao();
 }
 
 void igual()
@@ -797,7 +797,7 @@ void igual()
 		printf("\n[ERRO] Sintaxe errada, esperava uma nova linha de restrição, porém foi recebido %s\n\n", token.value);
 		exit(EXIT_FAILURE);
 	}
-	line();
+	nova_restricao();
 }
 
 void uniao_var()
