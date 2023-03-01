@@ -1,21 +1,57 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "input.h"
+
+#define STR_LEN 128
 
 /*
 	Global Variables
 */
-
-variavel_t *list_var = NULL;  // Vetor auxiliar para ler restrições
-size_t len_var = 0;           // Length do vetor list_var.
-size_t number_base = 0;       // Dimensão da matriz basica (B).
-size_t number_Nbase = 0;      // Dimensão da matriz n?o basica (N).
-double **vetor_b = NULL;      // Vetor B.
-variavel_t *var_base = NULL;  // Variveis basicas.
-variavel_t *var_Nbase = NULL; // Variveis não basicas.
+variavel_t* list_var  = NULL; // Vetor auxiliar para ler restrições
+size_t len_var        = 0;    // Length do vetor list_var.
+size_t number_base    = 0;    // Dimensão da matriz basica (B).
+size_t number_Nbase   = 0;    // Dimensão da matriz n?o basica (N).
+double** vetor_b      = NULL; // Vetor B.
+variavel_t* var_base  = NULL; // Variveis basicas.
+variavel_t* var_Nbase = NULL; // Variveis não basicas.
 int sinal;
 
 /*
 	Local Variables
 */
+typedef enum
+{
+	INICIO = 0,
+	SVAR,
+	SNUM,
+	DNUM,
+	DNUM_O,
+	SMENORIGUAL,
+	SMAIORIGUAL
+} states;
+
+typedef enum
+{
+	NUM = 0,
+	VAR,
+	MULT,
+	SOMA,
+	SUB,
+	NL,
+	EF,
+	MENORIGUAL,
+	MAIORIGUAL,
+	IGUAL,
+	ERROR
+} type_token;
+
+typedef struct
+{
+	char value[STR_LEN];
+	type_token type;
+} token_t;
 
 FILE *arq;
 token_t token;
@@ -26,7 +62,6 @@ size_t number_artifN = 1;
 /*
 	Local Functions
 */
-
 string random_var(string prefixo, size_t index);
 token_t get_token();
 void strlower(string str);
@@ -249,8 +284,8 @@ void input_file(string path_file)
 	for (size_t i = 0; i < len_var; i++)
 		if (list_var[i].aj == NULL)
 		{
-			list_var[i].aj = (double **)malloc(sizeof(double *));
-			list_var[i].aj[0] = (double *)calloc(number_base, sizeof(double));
+			list_var[i].aj = (double**)malloc(sizeof(double*));
+			list_var[i].aj[0] = (double*)calloc(number_base, sizeof(double));
 		}
 	uniao_var();
 	fclose(arq);
@@ -305,9 +340,9 @@ void funcao_objetivo()
 		strcpy(aux.name, token.value);
 		aux.type = ORIGINAL;
 		if (len_var == 0)
-			list_var = (variavel_t *)malloc(sizeof(variavel_t) * (++len_var));
+			list_var = (variavel_t*)malloc(sizeof(variavel_t) * (++len_var));
 		else
-			list_var = (variavel_t *)realloc(list_var, sizeof(variavel_t) * (++len_var));
+			list_var = (variavel_t*)realloc(list_var, sizeof(variavel_t) * (++len_var));
 		list_var[len_var - 1] = aux;
 		proxima();
 	}
@@ -346,9 +381,9 @@ void operacao(int sinal_var)
 		strcpy(aux.name, token.value);
 		aux.type = ORIGINAL;
 		if (len_var == 0)
-			list_var = (variavel_t *)malloc(sizeof(variavel_t) * (++len_var));
+			list_var = (variavel_t*)malloc(sizeof(variavel_t) * (++len_var));
 		else
-			list_var = (variavel_t *)realloc(list_var, sizeof(variavel_t) * (++len_var));
+			list_var = (variavel_t*)realloc(list_var, sizeof(variavel_t) * (++len_var));
 		list_var[len_var - 1] = aux;
 		proxima();
 	}
@@ -373,9 +408,9 @@ void variavel(double escalar)
 		strcpy(aux.name, token.value);
 		aux.type = ORIGINAL;
 		if (len_var == 0)
-			list_var = (variavel_t *)malloc(sizeof(variavel_t) * (++len_var));
+			list_var = (variavel_t*)malloc(sizeof(variavel_t) * (++len_var));
 		else
-			list_var = (variavel_t *)realloc(list_var, sizeof(variavel_t) * (++len_var));
+			list_var = (variavel_t*)realloc(list_var, sizeof(variavel_t) * (++len_var));
 		list_var[len_var - 1] = aux;
 		proxima();
 	}
@@ -410,12 +445,12 @@ void restricao()
 				exist = true;
 				if (list_var[i].aj == NULL)
 				{
-					list_var[i].aj = (double **)malloc(sizeof(double *));
-					list_var[i].aj[0] = (double *)calloc((number_base + 1), sizeof(double));
+					list_var[i].aj = (double**)malloc(sizeof(double*));
+					list_var[i].aj[0] = (double*)calloc((number_base + 1), sizeof(double));
 				}
 				else
 				{
-					list_var[i].aj[0] = (double *)realloc(list_var[i].aj[0], sizeof(double) * (number_base + 1));
+					list_var[i].aj[0] = (double*)realloc(list_var[i].aj[0], sizeof(double) * (number_base + 1));
 				}
 				list_var[i].aj[0][number_base] = 1;
 				break;
@@ -423,12 +458,12 @@ void restricao()
 		if (!exist)
 		{
 			if (len_var == 0)
-				list_var = (variavel_t *)malloc(sizeof(variavel_t) * (++len_var));
+				list_var = (variavel_t*)malloc(sizeof(variavel_t) * (++len_var));
 			else
-				list_var = (variavel_t *)realloc(list_var, sizeof(variavel_t) * (++len_var));
+				list_var = (variavel_t*)realloc(list_var, sizeof(variavel_t) * (++len_var));
 
-			double **vetor_aux = (double **)malloc(sizeof(double *));
-			vetor_aux[0] = (double *)calloc(number_base + 1, sizeof(double));
+			double**vetor_aux = (double**)malloc(sizeof(double*));
+			vetor_aux[0] = (double*)calloc(number_base + 1, sizeof(double));
 			vetor_aux[0][number_base] = 1;
 
 			variavel_t aux = {0, NULL, ORIGINAL, vetor_aux};
@@ -465,12 +500,12 @@ void nova_restricao()
 					exist = true;
 					if (list_var[i].aj == NULL)
 					{
-						list_var[i].aj = (double **)malloc(sizeof(double *));
-						list_var[i].aj[0] = (double *)calloc((number_base + 1), sizeof(double));
+						list_var[i].aj = (double**)malloc(sizeof(double*));
+						list_var[i].aj[0] = (double*)calloc((number_base + 1), sizeof(double));
 					}
 					else
 					{
-						list_var[i].aj[0] = (double *)realloc(list_var[i].aj[0], sizeof(double) * (number_base + 1));
+						list_var[i].aj[0] = (double*)realloc(list_var[i].aj[0], sizeof(double) * (number_base + 1));
 					}
 					list_var[i].aj[0][number_base] = 1;
 					break;
@@ -478,12 +513,12 @@ void nova_restricao()
 			if (!exist)
 			{
 				if (len_var == 0)
-					list_var = (variavel_t *)malloc(sizeof(variavel_t) * (++len_var));
+					list_var = (variavel_t*)malloc(sizeof(variavel_t) * (++len_var));
 				else
-					list_var = (variavel_t *)realloc(list_var, sizeof(variavel_t) * (++len_var));
+					list_var = (variavel_t*)realloc(list_var, sizeof(variavel_t) * (++len_var));
 
-				double **vetor_aux = (double **)malloc(sizeof(double *));
-				vetor_aux[0] = (double *)calloc(number_base + 1, sizeof(double));
+				double**vetor_aux = (double**)malloc(sizeof(double*));
+				vetor_aux[0] = (double*)calloc(number_base + 1, sizeof(double));
 				vetor_aux[0][number_base] = 1;
 
 				variavel_t aux = {0, NULL, ORIGINAL, vetor_aux};
@@ -549,12 +584,12 @@ void escalar_restrict(int sinal_var)
 				exist = true;
 				if (list_var[i].aj == NULL)
 				{
-					list_var[i].aj = (double **)malloc(sizeof(double *));
-					list_var[i].aj[0] = (double *)calloc((number_base + 1), sizeof(double));
+					list_var[i].aj = (double**)malloc(sizeof(double*));
+					list_var[i].aj[0] = (double*)calloc((number_base + 1), sizeof(double));
 				}
 				else
 				{
-					list_var[i].aj[0] = (double *)realloc(list_var[i].aj[0], sizeof(double) * (number_base + 1));
+					list_var[i].aj[0] = (double*)realloc(list_var[i].aj[0], sizeof(double) * (number_base + 1));
 				}
 				list_var[i].aj[0][number_base] = (double)sinal_var;
 				break;
@@ -562,12 +597,12 @@ void escalar_restrict(int sinal_var)
 		if (!exist)
 		{
 			if (len_var == 0)
-				list_var = (variavel_t *)malloc(sizeof(variavel_t) * (++len_var));
+				list_var = (variavel_t*)malloc(sizeof(variavel_t) * (++len_var));
 			else
-				list_var = (variavel_t *)realloc(list_var, sizeof(variavel_t) * (++len_var));
+				list_var = (variavel_t*)realloc(list_var, sizeof(variavel_t) * (++len_var));
 
-			double **vetor_aux = (double **)malloc(sizeof(double *));
-			vetor_aux[0] = (double *)calloc(number_base + 1, sizeof(double));
+			double**vetor_aux = (double**)malloc(sizeof(double*));
+			vetor_aux[0] = (double*)calloc(number_base + 1, sizeof(double));
 			vetor_aux[0][number_base] = (double)sinal_var;
 
 			variavel_t aux = {0, NULL, ORIGINAL, vetor_aux};
@@ -599,12 +634,12 @@ void variavel_restrict(double escalar)
 				exist = true;
 				if (list_var[i].aj == NULL)
 				{
-					list_var[i].aj = (double **)malloc(sizeof(double *));
-					list_var[i].aj[0] = (double *)calloc((number_base + 1), sizeof(double));
+					list_var[i].aj = (double**)malloc(sizeof(double*));
+					list_var[i].aj[0] = (double*)calloc((number_base + 1), sizeof(double));
 				}
 				else
 				{
-					list_var[i].aj[0] = (double *)realloc(list_var[i].aj[0], sizeof(double) * (number_base + 1));
+					list_var[i].aj[0] = (double*)realloc(list_var[i].aj[0], sizeof(double) * (number_base + 1));
 				}
 				list_var[i].aj[0][number_base] = escalar;
 				break;
@@ -612,12 +647,12 @@ void variavel_restrict(double escalar)
 		if (!exist)
 		{
 			if (len_var == 0)
-				list_var = (variavel_t *)malloc(sizeof(variavel_t) * (++len_var));
+				list_var = (variavel_t*)malloc(sizeof(variavel_t) * (++len_var));
 			else
-				list_var = (variavel_t *)realloc(list_var, sizeof(variavel_t) * (++len_var));
+				list_var = (variavel_t*)realloc(list_var, sizeof(variavel_t) * (++len_var));
 
-			double **vetor_aux = (double **)malloc(sizeof(double *));
-			vetor_aux[0] = (double *)calloc(number_base + 1, sizeof(double));
+			double**vetor_aux = (double**)malloc(sizeof(double*));
+			vetor_aux[0] = (double*)calloc(number_base + 1, sizeof(double));
 			vetor_aux[0][number_base] = escalar;
 
 			variavel_t aux = {0, NULL, ORIGINAL, vetor_aux};
@@ -642,26 +677,26 @@ void menor_igual()
 	{
 		for (size_t i = 0; i < number_base; i++)
 		{
-			var_base[i].aj[0] = (double *)realloc(var_base[i].aj[0], sizeof(double) * (number_base + 1));
+			var_base[i].aj[0] = (double*)realloc(var_base[i].aj[0], sizeof(double) * (number_base + 1));
 			var_base[i].aj[0][number_base] = 0;
 		}
 
 		if (number_base == 0)
 		{
-			var_base = (variavel_t *)malloc(sizeof(variavel_t) * (++number_base));
-			vetor_b = (double **)malloc(sizeof(double *) * (number_base));
-			vetor_b[0] = (double *)malloc(sizeof(double));
+			var_base = (variavel_t*)malloc(sizeof(variavel_t) * (++number_base));
+			vetor_b = (double**)malloc(sizeof(double*) * (number_base));
+			vetor_b[0] = (double*)malloc(sizeof(double));
 		}
 		else
 		{
-			var_base = (variavel_t *)realloc(var_base, sizeof(variavel_t) * (++number_base));
-			vetor_b = (double **)realloc(vetor_b, sizeof(double *) * (number_base));
-			vetor_b[number_base - 1] = (double *)malloc(sizeof(double));
+			var_base = (variavel_t*)realloc(var_base, sizeof(variavel_t) * (++number_base));
+			vetor_b = (double**)realloc(vetor_b, sizeof(double*) * (number_base));
+			vetor_b[number_base - 1] = (double*)malloc(sizeof(double));
 		}
 		vetor_b[number_base - 1][0] = (double)atof(token.value);
 
-		double **vetor_aux = (double **)malloc(sizeof(double *));
-		vetor_aux[0] = (double *)calloc(number_base, sizeof(double));
+		double**vetor_aux = (double**)malloc(sizeof(double*));
+		vetor_aux[0] = (double*)calloc(number_base, sizeof(double));
 		vetor_aux[0][number_base - 1] = 1;
 
 		variavel_t aux = {0, random_var("folga", number_folga++), FOLGA, vetor_aux};
@@ -689,44 +724,44 @@ void maior_igual()
 	{
 		for (size_t i = 0; i < number_base; i++)
 		{
-			var_base[i].aj[0] = (double *)realloc(var_base[i].aj[0], sizeof(double) * (number_base + 1));
+			var_base[i].aj[0] = (double*)realloc(var_base[i].aj[0], sizeof(double) * (number_base + 1));
 			var_base[i].aj[0][number_base] = 0;
 		}
 
 		for (size_t i = 0; i < number_Nbase; i++)
 		{
-			var_Nbase[i].aj[0] = (double *)realloc(var_Nbase[i].aj[0], sizeof(double) * (number_base + 1));
+			var_Nbase[i].aj[0] = (double*)realloc(var_Nbase[i].aj[0], sizeof(double) * (number_base + 1));
 			var_Nbase[i].aj[0][number_base] = 0;
 		}
 
 		if (number_base == 0)
 		{
-			var_base = (variavel_t *)malloc(sizeof(variavel_t) * (++number_base));
-			vetor_b = (double **)malloc(sizeof(double *) * (number_base));
-			vetor_b[0] = (double *)malloc(sizeof(double));
+			var_base = (variavel_t*)malloc(sizeof(variavel_t) * (++number_base));
+			vetor_b = (double**)malloc(sizeof(double*) * (number_base));
+			vetor_b[0] = (double*)malloc(sizeof(double));
 		}
 		else
 		{
-			var_base = (variavel_t *)realloc(var_base, sizeof(variavel_t) * (++number_base));
-			vetor_b = (double **)realloc(vetor_b, sizeof(double *) * (number_base));
-			vetor_b[number_base - 1] = (double *)malloc(sizeof(double));
+			var_base = (variavel_t*)realloc(var_base, sizeof(variavel_t) * (++number_base));
+			vetor_b = (double**)realloc(vetor_b, sizeof(double*) * (number_base));
+			vetor_b[number_base - 1] = (double*)malloc(sizeof(double));
 		}
 		vetor_b[number_base - 1][0] = (double)atof(token.value);
 
-		double **vetor_aux = (double **)malloc(sizeof(double *));
-		vetor_aux[0] = (double *)calloc(number_base, sizeof(double));
+		double**vetor_aux = (double**)malloc(sizeof(double*));
+		vetor_aux[0] = (double*)calloc(number_base, sizeof(double));
 		vetor_aux[0][number_base - 1] = 1;
 
 		variavel_t aux = {(double)abs(BIGM), random_var("artif", number_artif++), ARTIFICIAL, vetor_aux};
 		var_base[number_base - 1] = aux;
 
 		if (number_Nbase == 0)
-			var_Nbase = (variavel_t *)malloc(sizeof(variavel_t) * (++number_Nbase));
+			var_Nbase = (variavel_t*)malloc(sizeof(variavel_t) * (++number_Nbase));
 		else
-			var_Nbase = (variavel_t *)realloc(var_Nbase, sizeof(variavel_t) * (++number_Nbase));
+			var_Nbase = (variavel_t*)realloc(var_Nbase, sizeof(variavel_t) * (++number_Nbase));
 
-		vetor_aux = (double **)malloc(sizeof(double *));
-		vetor_aux[0] = (double *)calloc(number_base, sizeof(double));
+		vetor_aux = (double**)malloc(sizeof(double*));
+		vetor_aux[0] = (double*)calloc(number_base, sizeof(double));
 		vetor_aux[0][number_base - 1] = -1;
 
 		variavel_t aux1 = {0, random_var("folgaN", number_artifN++), FOLGA, vetor_aux};
@@ -754,32 +789,32 @@ void igual()
 	{
 		for (size_t i = 0; i < number_base; i++)
 		{
-			var_base[i].aj[0] = (double *)realloc(var_base[i].aj[0], sizeof(double) * (number_base + 1));
+			var_base[i].aj[0] = (double*)realloc(var_base[i].aj[0], sizeof(double) * (number_base + 1));
 			var_base[i].aj[0][number_base] = 0;
 		}
 
 		for (size_t i = 0; i < number_Nbase; i++)
 		{
-			var_Nbase[i].aj[0] = (double *)realloc(var_Nbase[i].aj[0], sizeof(double) * (number_base + 1));
+			var_Nbase[i].aj[0] = (double*)realloc(var_Nbase[i].aj[0], sizeof(double) * (number_base + 1));
 			var_Nbase[i].aj[0][number_base] = 0;
 		}
 
 		if (number_base == 0)
 		{
-			var_base = (variavel_t *)malloc(sizeof(variavel_t) * (++number_base));
-			vetor_b = (double **)malloc(sizeof(double *) * (number_base));
-			vetor_b[0] = (double *)malloc(sizeof(double));
+			var_base = (variavel_t*)malloc(sizeof(variavel_t) * (++number_base));
+			vetor_b = (double**)malloc(sizeof(double*) * (number_base));
+			vetor_b[0] = (double*)malloc(sizeof(double));
 		}
 		else
 		{
-			var_base = (variavel_t *)realloc(var_base, sizeof(variavel_t) * (++number_base));
-			vetor_b = (double **)realloc(vetor_b, sizeof(double *) * (number_base));
-			vetor_b[number_base - 1] = (double *)malloc(sizeof(double));
+			var_base = (variavel_t*)realloc(var_base, sizeof(variavel_t) * (++number_base));
+			vetor_b = (double**)realloc(vetor_b, sizeof(double*) * (number_base));
+			vetor_b[number_base - 1] = (double*)malloc(sizeof(double));
 		}
 		vetor_b[number_base - 1][0] = (double)atof(token.value);
 
-		double **vetor_aux = (double **)malloc(sizeof(double *));
-		vetor_aux[0] = (double *)calloc(number_base, sizeof(double));
+		double**vetor_aux = (double**)malloc(sizeof(double*));
+		vetor_aux[0] = (double*)calloc(number_base, sizeof(double));
 		vetor_aux[0][number_base - 1] = 1;
 
 		variavel_t aux = {(double)abs(BIGM), random_var("artif", number_artif++), ARTIFICIAL, vetor_aux};
@@ -802,7 +837,7 @@ void igual()
 
 void uniao_var()
 {
-	var_Nbase = (variavel_t *)realloc(var_Nbase, sizeof(variavel_t) * (len_var + number_Nbase));
+	var_Nbase = (variavel_t*)realloc(var_Nbase, sizeof(variavel_t) * (len_var + number_Nbase));
 	for (size_t i = number_Nbase, j = 0; i < (len_var + number_Nbase); j++, i++)
 		var_Nbase[i] = list_var[j];
 

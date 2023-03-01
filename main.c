@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <locale.h>
@@ -5,7 +6,7 @@
 #include "input.h"
 #include "simplex.h"
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     setlocale(LC_NUMERIC, "Portuguese");
     setlocale(LC_CTYPE, "Portuguese");

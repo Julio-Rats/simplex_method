@@ -1,10 +1,14 @@
-#include "sistema_linear.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
 
+#include "sistema_linear.h"
 
 /* 
     Local Function
 */
-double **multi_escalar(double **matriz, double escalar, size_t m, size_t n);
+double** multi_escalar(double** matriz, double escalar, size_t m, size_t n);
 
 double** decomposicao_LU(double** a, double** b, size_t n)
 {
@@ -144,7 +148,6 @@ double** multi_matriz(double** a, double** b, size_t m, size_t n, size_t r)
       return c;
 }
 
-
 double** multi_escalar(double** matriz, double escalar, size_t m, size_t n)
 {
       double** c = (double**) calloc(m,sizeof(double*));
@@ -170,7 +173,7 @@ double** multi_escalar(double** matriz, double escalar, size_t m, size_t n)
       return c;
 }
 
-double**  transposta(double** matriz, size_t m, size_t n)
+double** transposta(double** matriz, size_t m, size_t n)
 {
       double** transposta = (double**) calloc(n,sizeof(double*));
       if (!transposta)

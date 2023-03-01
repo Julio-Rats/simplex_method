@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "simplex.h"
 
 /*
@@ -8,28 +11,32 @@ extern int sinal; // input.c
 /*
     Local Variables
 */
+typedef struct
+{
+    double valor;
+    size_t variavel;
+} custo_t;
 
-double **matriz_Base = NULL; //  Matriz com as j colunas de A, das j variáveis basicas.
-custo_t *custos = NULL;
-size_t len_custos = 0;
-size_t sort = 0;
+double** matriz_Base = NULL; //  Matriz com as j colunas de A, das j variáveis basicas.
+custo_t* custos      = NULL;
+size_t len_custos    = 0;
+size_t sort          = 0;
 
 /*
     Local Functions
 */
-
 void calc_menor_custo(double valor, size_t var);
 int var_menor_custo();
 
 void simplex()
 {
-    double **lambda = NULL;
-    double **Xb = NULL;
-    double **vetor_y = NULL;
-    double **coeficientes = (double **)malloc(sizeof(double *));
-    coeficientes[0] = (double *)malloc(sizeof(double) * number_base);
+    double** lambda  = NULL;
+    double** Xb      = NULL;
+    double** vetor_y = NULL;
+    double** coeficientes = (double**)malloc(sizeof(double*));
+    coeficientes[0] = (double*)malloc(sizeof(double) * number_base);
 
-    matriz_Base = (double **)malloc(sizeof(double *) * number_base);
+    matriz_Base = (double**)malloc(sizeof(double*) * number_base);
 
     int iter = 1;
 
