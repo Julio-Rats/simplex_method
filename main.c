@@ -16,7 +16,7 @@
 int main(int argc, char* argv[])
 {
     #ifdef _WIN32
-        SetConsoleOutputCP(65001); //UTF8 
+        SetConsoleOutputCP(65001); //UTF-8 
     #elif __linux__
         setlocale(LC_NUMERIC, "Portuguese");
         setlocale(LC_CTYPE, "Portuguese");

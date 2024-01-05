@@ -4,10 +4,12 @@
 #define true 1
 #define false 0
 
-#define BIGM (1000000)
+#define BIGM (1e6)
 
 typedef char  bool;
 typedef char* string;
+typedef double* vetor_t;
+typedef double** matriz_t;
 
 typedef enum
 {
@@ -18,9 +20,9 @@ typedef enum
 
 typedef struct
 {
-    double cost;    //  Custo na função objetivo (C);
+    double cost;    // Custo na função objetivo (C);
     string name;    // Nome da variável, ex: "x1", "x2".
-    vartype_e type; // Tipo da variável (folga ou artificial).
+    vartype_e type; // Tipo da variável (Folga ou Artificial).
     double** aj;    // Coluna com suas restrições.
 } variavel_t;
 
