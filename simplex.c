@@ -86,7 +86,7 @@ void simplex()
         printf("\n");
 
         double custo, menor_custo = INT_MAX;
-        int variavel_entra;
+        long int variavel_entra;
 
         if (custos)
         {
@@ -130,7 +130,7 @@ void simplex()
 
         bool ilimitada = true;
         double passo, menor_passo;
-        long int variavel_sai;
+        size_t variavel_sai;
         do
         {
             if ((variavel_entra = var_menor_custo()) == -1)
