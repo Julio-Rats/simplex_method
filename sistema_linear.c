@@ -17,7 +17,7 @@ double** decomposicao_LU(double** a, double** b, size_t n)
     double** lu = (double**) malloc(n * sizeof(double*));
     if (!lu)
     {
-        printf("Erro alocação matriz\n");
+        printf("Erro alocaÃ§Ã£o matriz\n");
         exit(EXIT_FAILURE);
     }
     for (size_t i = 0; i < n; i++)
@@ -25,7 +25,7 @@ double** decomposicao_LU(double** a, double** b, size_t n)
         lu[i] = (double*) calloc(n, sizeof(double));
         if (!lu[i])
         {
-            printf("Erro alocacão matriz\n");
+            printf("Erro alocacÃ£o matriz\n");
             exit(EXIT_FAILURE);
         }
         memcpy(lu[i], a[i], n * sizeof(double));
@@ -46,7 +46,7 @@ double** decomposicao_LU(double** a, double** b, size_t n)
 
         if (fabs(pivo) < 1e-6)
         {
-            printf("[ERRO]: Matriz singular, sistema não possivel !\n");
+            printf("[ERRO]: Matriz singular, sistema nÃ£o possivel !\n");
             exit(EXIT_FAILURE);
         }
 
@@ -127,7 +127,7 @@ double** multi_matriz(double** a, double** b, size_t m, size_t n, size_t r)
       double** c = (double**) calloc(m,sizeof(double*));
       if (!c)
       {
-          printf("Erro alocacão matriz\n");
+          printf("Erro alocaÃ§Ã£o matriz\n");
           exit(EXIT_FAILURE);
       }
       for (size_t i = 0; i < m; i++)
@@ -135,7 +135,7 @@ double** multi_matriz(double** a, double** b, size_t m, size_t n, size_t r)
           c[i] = (double*) calloc(r,sizeof(double));
           if (!c[i])
           {
-              printf("Erro alocacão matriz\n");
+              printf("Erro alocaÃ§Ã£o matriz\n");
               exit(EXIT_FAILURE);
           }
       }
@@ -153,7 +153,7 @@ double** multi_escalar(double** matriz, double escalar, size_t m, size_t n)
       double** c = (double**) calloc(m,sizeof(double*));
       if (!c)
       {
-          printf("Erro alocacão matriz\n");
+          printf("Erro alocacÃ£o matriz\n");
           exit(EXIT_FAILURE);
       }
       for (size_t i = 0; i < m; i++)
@@ -161,7 +161,7 @@ double** multi_escalar(double** matriz, double escalar, size_t m, size_t n)
           c[i] = (double*) calloc(n,sizeof(double));
           if (!c[i])
           {
-              printf("Erro alocacão matriz\n");
+              printf("Erro alocacÃ£o matriz\n");
               exit(EXIT_FAILURE);
           }
       }
@@ -178,7 +178,7 @@ double** transposta(double** matriz, size_t m, size_t n)
       double** transposta = (double**) calloc(n,sizeof(double*));
       if (!transposta)
       {
-          printf("Erro alocacão matriz\n");
+          printf("Erro alocacÃ£o matriz\n");
           exit(EXIT_FAILURE);
       }
       for (size_t i = 0; i < n; i++)
@@ -186,7 +186,7 @@ double** transposta(double** matriz, size_t m, size_t n)
           transposta[i] = (double*) calloc(m,sizeof(double));
           if (!transposta[i])
           {
-              printf("Erro alocacão matriz\n");
+              printf("Erro alocacÃ£o matriz\n");
               exit(EXIT_FAILURE);
           }
       }

@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
+#include <math.h>
 
 #include "simplex.h"
 
@@ -17,7 +19,7 @@ typedef struct
     size_t variavel;
 } custo_t;
 
-double** matriz_Base = NULL; //  Matriz com as j colunas de A, das j variáveis basicas.
+double** matriz_Base = NULL; //  Matriz com as j colunas de A, das j variÃ¡veis basicas.
 custo_t* custos      = NULL;
 size_t len_custos    = 0;
 size_t sort          = 0;
@@ -40,15 +42,17 @@ void simplex()
 
     int iter = 1;
 
+    bool mult_sol = false;
+
     while (true)
     {
-        printf("\t\t%dª ITERAÇÃO\n\n", iter++);
-        printf("Variáveis Basicas \t B[");
+        printf("\t\t%dÂª ITERAÃ‡ÃƒO\n\n", iter++);
+        printf("VariÃ¡veis Basicas \t B[");
         for (size_t i = 0; i < number_base - 1; i++)
             printf("%s, ", var_base[i].name);
 
         printf("%s]\n", var_base[number_base - 1].name);
-        printf("Variáveis não Basicas \t N[");
+        printf("VariÃ¡veis nÃ£o Basicas \t N[");
         for (size_t i = 0; i < number_Nbase - 1; i++)
             printf("%s, ", var_Nbase[i].name);
 
@@ -89,7 +93,7 @@ void simplex()
         printf("\n");
 
         bool otimo = true;
-        double custo, menor_custo = 1;
+        double custo, menor_custo = INT_MAX;
         int variavel_entra;
 
         if (custos)
@@ -107,13 +111,15 @@ void simplex()
             printf("Custo Var: %s -> %.2lf\n", var_Nbase[i].name, custo);
             if (custo < 0)
             {
-                otimo = false;
                 if (custo <= menor_custo)
                 {
                     menor_custo = custo;
                     calc_menor_custo(custo, i);
                 }
-            }
+                if (otimo)
+                    otimo = false;
+            }else if (!mult_sol && custo == 0)
+                mult_sol = true;
         }
 
         Xb = decomposicao_LU(matriz_Base, vetor_b, number_base);
@@ -135,7 +141,7 @@ void simplex()
 
             if (variavel_entra == -1)
             {
-                printf("\n\tSolução ILIMITADA\n\n");
+                printf("\n\tSoluÃ§Ã£o ILIMITADA\n\n");
                 exit(EXIT_SUCCESS);
             }
 
@@ -143,23 +149,17 @@ void simplex()
 
             for (size_t i = 0; i < number_base; i++)
             {
-                if (vetor_y[i][0] > 0)
-                {
-                    passo = (Xb[i][0]) / (vetor_y[i][0]);
-                    if (ilimitada) // primeira verifica??o
-                    {
-                        menor_passo = passo;
-                        variavel_sai = i;
-                        ilimitada = false;
-                        continue;
-                    }
-                    if (passo < menor_passo)
-                    {
-                        menor_passo = passo;
-                        variavel_sai = i;
-                    }
-                }
                 free(matriz_Base[i]);
+                if (vetor_y[i][0] <= 1e-6)
+                    continue;                  
+                
+                passo = (Xb[i][0]) / (vetor_y[i][0]);
+                if (passo < menor_passo || ilimitada) // primeira verificaÃ§Ã£o
+                {
+                    menor_passo  = passo;
+                    variavel_sai = i;
+                    ilimitada = false;
+                }
             }
             printf("Vetor Y:\n");
             for (size_t i = 0; i < number_base; i++)
@@ -169,13 +169,13 @@ void simplex()
             }
             printf("\n");
             if (ilimitada)
-                printf("não achou nenhum Y positivo\n\n");
+                printf("nÃ£o achou nenhum Y positivo\n\n");
         } while (ilimitada);
 
-        printf("Resumo da Interação:\n\n");
-        printf("Menor custo %.2lf, variável %s\n", menor_custo, var_Nbase[variavel_entra].name);
-        printf("Menor passo %.2lf, variável %s\n", menor_passo, var_base[variavel_sai].name);
-        printf("Entra variável %s e sai variável %s da base, nessa interação\n\n", var_Nbase[variavel_entra].name, var_base[variavel_sai].name);
+        printf("Resumo da InteraÃ§Ã£o:\n\n");
+        printf("Menor custo %.2lf, variÃ¡vel %s\n", menor_custo, var_Nbase[variavel_entra].name);
+        printf("Menor passo %.2lf, variÃ¡vel %s\n", menor_passo, var_base[variavel_sai].name);
+        printf("Entra variÃ¡vel %s e sai variÃ¡vel %s da base, nessa iteraÃ§Ã£o\n\n", var_Nbase[variavel_entra].name, var_base[variavel_sai].name);
 
         variavel_t aux = var_Nbase[variavel_entra];
         var_Nbase[variavel_entra] = var_base[variavel_sai];
@@ -183,29 +183,33 @@ void simplex()
         // char a = getc(stdin);
     }
 
-    double fx = 0.f; // valor função objetivo
+    double fx = 0.f; // valor funÃ§Ã£o objetivo
 
     for (size_t i = 0; i < number_base; i++)
-        if (var_base[i].type == ARTIFICIAL)
+        if (var_base[i].type == ARTIFICIAL && Xb[i][0])
         {
-            printf("\nVariável Artificial no fim da otimização, problema INFACTIVEL!!\n\n");
+            printf("\nVariÃ¡vel Artificial (nÃ£o nula) no fim da otimizaÃ§Ã£o, problema INFACTÃVEL !!!\n\n");
             exit(EXIT_FAILURE);
         }
 
-    printf("Otimo encontrado !  \n");
-    printf("\n\tResultado:\n\n");
+
+    if (mult_sol)
+        printf("MÃšLTIPLAS SOLUÃ‡Ã•ES POSSÃVEIS ! (Uma delas apresentada)\n");
+    else
+        printf("Ã“timo encontrado !\n");
+    printf("\n\tSoluÃ§Ã£o:\n\n");
     for (size_t i = 0; i < number_base; i++)
         if (var_base[i].type == ORIGINAL)
         {
             fx += Xb[i][0] * var_base[i].cost;
-            printf("\tVariável %s -> %.2lf\n", var_base[i].name, Xb[i][0]);
+            printf("\tVariÃ¡vel %s -> %.2lf\n", var_base[i].name, Xb[i][0]);
         }
 
     for (size_t i = 0; i < number_Nbase; i++)
         if (var_Nbase[i].type == ORIGINAL)
-            printf("\tVariável %s -> 0\n", var_Nbase[i].name);
+            printf("\tVariÃ¡vel %s -> 0\n", var_Nbase[i].name);
 
-    printf("\n\tFunção objetivo: %.2lf\n\n", sinal*fx);
+    printf("\n\tFunÃ§Ã£o objetivo: %.2lf\n\n", sinal*fx);
 }
 
 void calc_menor_custo(double valor, size_t var)
@@ -215,7 +219,7 @@ void calc_menor_custo(double valor, size_t var)
         custos = (custo_t *)malloc(sizeof(custo_t));
         if (!custos)
         {
-            printf("Erro Alocação de memoria\n");
+            printf("Erro AlocaÃ§Ã£o de memoria\n");
             exit(EXIT_FAILURE);
         }
         len_custos = 1;
@@ -228,7 +232,7 @@ void calc_menor_custo(double valor, size_t var)
         custos = (custo_t *)realloc(custos, sizeof(custo_t));
         if (!custos)
         {
-            printf("Erro Realocação de memoria\n");
+            printf("Erro RealocaÃ§Ã£o de memoria\n");
             exit(EXIT_FAILURE);
         }
         custos[0].valor = valor;
@@ -239,7 +243,7 @@ void calc_menor_custo(double valor, size_t var)
         custos = (custo_t *)realloc(custos, sizeof(custo_t) * (++len_custos));
         if (!custos)
         {
-            printf("Erro Realocação de memoria\n");
+            printf("Erro RealocaÃ§Ã£o de memoria\n");
             exit(EXIT_FAILURE);
         }
         custos[len_custos - 1].valor = valor;

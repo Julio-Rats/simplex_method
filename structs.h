@@ -4,7 +4,7 @@
 #define true 1
 #define false 0
 
-#define BIGM 1000000
+#define BIGM (1000000)
 
 typedef char  bool;
 typedef char* string;
@@ -18,16 +18,16 @@ typedef enum
 
 typedef struct
 {
-    double cost;    //  Custo na fun��o objetivo (C);
-    string name;    // Nome da variavel, ex: "x1", "x2".
-    vartype_e type; // Tipo da variavel (folga ou artificial).
-    double** aj;    // Coluna com suas restri��es.
+    double cost;    //  Custo na função objetivo (C);
+    string name;    // Nome da variável, ex: "x1", "x2".
+    vartype_e type; // Tipo da variável (folga ou artificial).
+    double** aj;    // Coluna com suas restrições.
 } variavel_t;
 
-extern size_t number_base;    // Dimens�o da matriz basica (B).
-extern size_t number_Nbase;   // Dimens�o da matriz n�o basica (N).
+extern size_t number_base;    // Dimensão da matriz básica (B).
+extern size_t number_Nbase;   // Dimensão da matriz não básica (N).
 extern double** vetor_b;      // Vetor B
-extern variavel_t* var_base;  // Variveis basicas.
-extern variavel_t* var_Nbase; // Variveis n�o basicas.
+extern variavel_t* var_base;  // variáveis básicas.
+extern variavel_t* var_Nbase; // variáveis não básicas.
 
 #endif
