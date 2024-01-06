@@ -1,16 +1,14 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
 #include "sistema_linear.h"
 
-
 matriz_t decomposicao_LU(matriz_t A, matriz_t x, matriz_t b, size_t n)
 {
 /*
     Ax = b, solver using LU decomposition  
-
+    
     obs: Using x and b as matrix, convenience in creating transposes of the vector.
 */
 

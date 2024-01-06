@@ -29,8 +29,8 @@ void simplex()
     matriz_t matriz_Base    = (matriz_t)malloc(sizeof(vetor_t) * number_base); // (B) Matriz com as j colunas de A, das j variáveis básicas.
     matriz_t matriz_Base_tr = init_matriz(number_base, number_base);           // (B^t) Matriz Básica transposta.
 
-    matriz_t lambda         = init_matriz(number_base, 1); // cb^t*B^-1  
-    matriz_t lambda_tr      = init_matriz(1, number_base); // lambda^t  
+    matriz_t lambda         = init_matriz(number_base, 1); // cb^t*B^-1
+    matriz_t lambda_tr      = init_matriz(1, number_base); // lambda^t
     matriz_t var_Nbase_tr   = init_matriz(number_base, 1); // (Aj)^t; Coluna j de A da variáveis não básicas.
     matriz_t custo_basico_A = init_matriz(1, 1); // ci^t*B^-1*Aj, j var não básica, i variável básica.
 
@@ -129,7 +129,7 @@ void simplex()
             break;
 
         bool ilimitada = true;
-        double passo, menor_passo;
+        double passo, menor_passo = 0; // warning safe (warning uninitialized)
         size_t variavel_sai;
         do
         {
@@ -179,7 +179,6 @@ void simplex()
             printf("\nVariável Artificial (não nula) no fim da otimização, problema INFACTÍVEL !!!\n\n");
             exit(EXIT_FAILURE);
         }
-
 
     if (mult_sol)
         printf("MÚLTIPLAS SOLUÇÕES POSSÍVEIS ! (Uma delas apresentada)\n");
