@@ -20,17 +20,17 @@ size_t len_custos    = 0;
 size_t sort          = 0;
 
 /*  Local Functions  */
-void calc_menor_custo(double valor, size_t var);
-int var_menor_custo();
+void lista_custo_iguais(double valor, size_t var);
+long int var_menor_custo();
 matriz_t init_matriz(size_t m, size_t n);
 
 void simplex()
 {
-    matriz_t matriz_Base    = (matriz_t)malloc(sizeof(vetor_t) * number_base); // (B) Matriz com as j colunas de A, das j variáveis básicas.
-    matriz_t matriz_Base_tr = init_matriz(number_base, number_base);           // (B^t) Matriz Básica transposta.
+    matriz_t matriz_Base    = init_matriz(number_base, number_base);           // (B) Matriz com as j colunas de A, das j variáveis básicas.
+    matriz_t matriz_Base_tr = (matriz_t)malloc(sizeof(vetor_t) * number_base); // (B^t) Matriz Básica transposta.
 
     matriz_t lambda         = init_matriz(number_base, 1); // cb^t*B^-1
-    matriz_t lambda_tr      = init_matriz(1, number_base); // lambda^t
+    // matriz_t lambda_tr      = init_matriz(1, number_base); // lambda^t
     matriz_t var_Nbase_tr   = init_matriz(number_base, 1); // (Aj)^t; Coluna j de A da variáveis não básicas.
     matriz_t custo_basico_A = init_matriz(1, 1); // ci^t*B^-1*Aj, j var não básica, i variável básica.
 
@@ -46,6 +46,7 @@ void simplex()
     while (true)
     {
         printf("\t\t%zuª ITERAÇÃO\n\n", iter++);
+
         printf("Variáveis Básicas \t B[");
         for (size_t i = 0; i < number_base - 1; i++)
             printf("%s, ", var_base[i].name);
@@ -60,33 +61,31 @@ void simplex()
         for (size_t i = 0; i < number_base; i++)
         {
             coef[i][0] = var_base[i].cost;
-            matriz_Base[i] = var_base[i].aj[0];
+            matriz_Base_tr[i] = var_base[i].aj[0];
         }
 
-        transposta(matriz_Base, matriz_Base_tr, number_base, number_base);
-        decomposicao_LU(matriz_Base, lambda, coef, number_base);
+        transposta(matriz_Base_tr, matriz_Base, number_base, number_base);
+        decomposicao_LU(matriz_Base_tr, lambda, coef, number_base);
 
-        printf("Coeficientes Básicos:\n");
+        printf("Coeficientes Básicos (Cb):\n");
         for (size_t i = 0; i < number_base; i++)
-            printf("%.4lf\t", coef[i][0]);
-        printf("\n\n");
+            printf("%.4lf\n", coef[i][0]);
 
-        printf("Matriz Básica:");
+        printf("\nMatriz B = [A[j]] | Para todo j básico:");
         for (size_t i = 0; i < number_base; i++)
         {
             printf("\n");
             for (size_t j = 0; j < number_base; j++)
-                printf("%.4lf\t", matriz_Base_tr[i][j]);
+                printf("%.4lf\t", matriz_Base[i][j]);
         }
-        printf("\n\n");
 
-        printf("Lambda:\n");
+        printf("\n\nLambda: (B^t)^-1 * Cb\n");
         for (size_t i = 0; i < number_base; i++)
             printf("%.4lf\n", lambda[i][0]);
-        printf("\n");
 
         double custo, menor_custo = INT_MAX;
-        long int variavel_entra;
+        long int variavel_entra = -1;
+        size_t variavel_sai;
 
         if (custos)
         {
@@ -95,14 +94,26 @@ void simplex()
             len_custos = 0;
         }
 
-        sort = 0;
+        decomposicao_LU(matriz_Base, Xb, vetor_b, number_base); // vetor_b -> input.h
 
+        printf("\nVetor x = B^-1 * b :\n");
+        for (size_t i = 0; i < number_base; i++)
+            printf("%.4lf\n", Xb[i][0]);
+
+        fx = 0;
+        for (size_t i = 0; i < number_base; i++)
+            if (var_base[i].type == ORIGINAL)
+                fx += Xb[i][0] * var_base[i].cost;
+    	    
+        printf("\nFunção objetivo: %.4lf\n", sinal*fx);
+
+        sort = 0;
         bool otimo = true;
 
+        printf("\nCustos (Cn[j] - A[j]^t * lambda | j não básicos)\n");
         for (size_t i = 0; i < number_Nbase; i++)
         {
-            transposta(var_Nbase[i].aj, var_Nbase_tr, 1, number_base);
-            multi_matriz((transposta(lambda, lambda_tr, number_base, 1)), var_Nbase_tr, custo_basico_A, 1, number_base, 1);
+            multi_matriz(var_Nbase[i].aj, lambda, custo_basico_A, 1, number_base, 1);
             custo = var_Nbase[i].cost - custo_basico_A[0][0];
             printf("Custo Var: %s -> %.4lf\n", var_Nbase[i].name, custo);
             if (custo < 0)
@@ -110,36 +121,29 @@ void simplex()
                 if (custo <= menor_custo)
                 {
                     menor_custo = custo;
-                    calc_menor_custo(custo, i);
+                    lista_custo_iguais(custo, i);
                 }
                 if (otimo)
                     otimo = false;
             }else if (!mult_sol && custo == 0)
                 mult_sol = true;
         }
-    
-        decomposicao_LU(matriz_Base_tr, Xb, vetor_b, number_base); // vetor_b -> input.h
-
-        printf("\nVetor X:\n");
-        for (size_t i = 0; i < number_base; i++)
-            printf("%.4lf\n", Xb[i][0]);
-        printf("\n\n");
 
         if (otimo)
             break;
 
         bool ilimitada = true;
         double passo, menor_passo = 0; // warning safe (warning uninitialized)
-        size_t variavel_sai;
         do
         {
             if ((variavel_entra = var_menor_custo()) == -1)
             {
-                printf("\n\tSolução ILIMITADA\n\n");
+                printf("\n\n\tSolução ILIMITADA\n\n");
                 exit(EXIT_SUCCESS);
             }
 
-            decomposicao_LU(matriz_Base_tr, vetor_y, transposta(var_Nbase[variavel_entra].aj, var_Nbase_tr, 1, number_base), number_base);
+
+            decomposicao_LU(matriz_Base, vetor_y, transposta(var_Nbase[variavel_entra].aj, var_Nbase_tr, 1, number_base), number_base);
 
             for (size_t i = 0; i < number_base; i++)
             {
@@ -154,17 +158,18 @@ void simplex()
                     ilimitada = false;
                 }
             }
-            printf("Vetor Y:\n");
+            printf("\nVetor Aj, variável %s\n", var_Nbase[variavel_entra].name);
             for (size_t i = 0; i < number_base; i++)
                 printf("%.4lf\n", vetor_y[i][0]);
-            printf("\n");
+
             if (ilimitada)
-                printf("não achou nenhum Y positivo\n\n");
+                printf("\nNão achou nenhum Y positivo\n");
+
         } while (ilimitada);
 
-        printf("Resumo da Interação:\n\n");
+        printf("\nResumo da Interação:\n\n");
         printf("Menor custo %.4lf, variável %s\n", menor_custo, var_Nbase[variavel_entra].name);
-        printf("Menor passo %.4lf, variável %s\n", menor_passo, var_base[variavel_sai].name);
+        printf("Menor passo %.4lf (min = {x[i]/Aj[i]} | Para todo Aj[i] > 0), variável %s\n", menor_passo, var_base[variavel_sai].name);
         printf("Nessa iteração entra variável %s e sai variável %s da base\n\n", var_Nbase[variavel_entra].name, var_base[variavel_sai].name);
 
         variavel_t aux = var_Nbase[variavel_entra];
@@ -181,10 +186,12 @@ void simplex()
         }
 
     if (mult_sol)
-        printf("MÚLTIPLAS SOLUÇÕES POSSÍVEIS ! (Uma delas apresentada)\n");
+        printf("\nMÚLTIPLAS SOLUÇÕES POSSÍVEIS ! (Uma delas apresentada)\n");
     else
-        printf("Ótimo encontrado !\n");
+        printf("\nÓtimo encontrado !\n");
+
     printf("\n\tSolução:\n\n");
+    fx = 0;
     for (size_t i = 0; i < number_base; i++)
         if (var_base[i].type == ORIGINAL)
         {
@@ -198,38 +205,35 @@ void simplex()
     printf("\n\tFunção objetivo: %.4lf\n\n", sinal*fx);
 }
 
-void calc_menor_custo(double valor, size_t var)
+void lista_custo_iguais(double valor, size_t var)
 {
     if (len_custos == 0)
     {
-        custos = (custo_t *)malloc(sizeof(custo_t));
-        if (!custos)
+        if (!(custos = (custo_t*)malloc(sizeof(custo_t))))
         {
-            printf("Erro Alocação de memoria\n");
+            printf("[ERRO] Falha alocação de memoria para lista de custo, função lista_custo_iguais()\n\n");
             exit(EXIT_FAILURE);
         }
         len_custos = 1;
         custos[0].valor = valor;
         custos[0].variavel = var;
     }
-    else if (custos[0].valor > valor)
+    else if (custos[0].valor > valor) // reset size to 1
     {
         len_custos = 1;
-        custos = (custo_t *)realloc(custos, sizeof(custo_t));
-        if (!custos)
+        if (!(custos = (custo_t *)realloc(custos, sizeof(custo_t))))
         {
-            printf("Erro Realocação de memoria\n");
+            printf("[ERRO] Falha alocação de memoria para lista de custo, função lista_custo_iguais()\n\n");
             exit(EXIT_FAILURE);
         }
         custos[0].valor = valor;
         custos[0].variavel = var;
     }
-    else if (custos[0].valor == valor)
+    else if (custos[0].valor == valor) // make list same values (min value)
     {
-        custos = (custo_t *)realloc(custos, sizeof(custo_t) * (++len_custos));
-        if (!custos)
+        if (!(custos = (custo_t *)realloc(custos, sizeof(custo_t) * (++len_custos))))
         {
-            printf("Erro Realocação de memoria\n");
+            printf("[ERRO] Falha alocação de memoria para lista de custo, função lista_custo_iguais()\n\n");
             exit(EXIT_FAILURE);
         }
         custos[len_custos - 1].valor = valor;
@@ -237,7 +241,7 @@ void calc_menor_custo(double valor, size_t var)
     }
 }
 
-int var_menor_custo()
+long int var_menor_custo()
 {
     if (sort < len_custos)
         return custos[sort++].variavel;
