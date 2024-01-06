@@ -1,19 +1,36 @@
-all: sistema struct simpl input main
-	gcc *.o -o simplex
+CC = gcc
 
-sistema:
-	gcc -c sistema_linear.h sistema_linear.c
+MYFLAGS = -O2 -W
 
-struct:
-	gcc -c structs.h
+TARGET = simplex
 
-simpl:
-	gcc -c simplex.h simplex.c
+OBJFILES = input.o simplex.o main.o sistema_linear.o
 
-input:
-	gcc -c input.h input.c
-main:
-	gcc -c main.c
+default: all
+
+all: 
+	$(MAKE) $(TARGET)
+
+# Regras para gerar o executável
+$(TARGET): $(OBJFILES) 
+	$(CC) $(OBJFILES) -o $(TARGET)
+
+# Regras de compilação
+input.o: input.c input.h structs.h
+	$(CC) $(MYFLAGS) -c input.c
+
+sistema_linear.o: sistema_linear.c sistema_linear.h structs.h
+	$(CC) $(MYFLAGS) -c sistema_linear.c
+
+simplex.o: simplex.c simplex.h sistema_linear.c sistema_linear.h
+	$(CC) $(MYFLAGS) -c simplex.c
+
+main.o: main.c input.c input.h simplex.c simplex.h
+	$(CC) $(MYFLAGS) -c main.c
+
+clean:
+	rm -f *.o
+	rm $(TARGET)
 
 clear:
-	rm *.o *.gch
+	rm -f *.o
