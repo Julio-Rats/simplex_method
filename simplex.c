@@ -30,7 +30,6 @@ void simplex()
     matriz_t matriz_Base_tr = (matriz_t)malloc(sizeof(vetor_t) * number_base); // (B^t) Matriz Básica transposta.
 
     matriz_t lambda         = init_matriz(number_base, 1); // cb^t*B^-1
-    // matriz_t lambda_tr      = init_matriz(1, number_base); // lambda^t
     matriz_t var_Nbase_tr   = init_matriz(number_base, 1); // (Aj)^t; Coluna j de A da variáveis não básicas.
     matriz_t custo_basico_A = init_matriz(1, 1); // ci^t*B^-1*Aj, j var não básica, i variável básica.
 
