@@ -306,7 +306,7 @@ void tipo_otimizacao()
     }
     else if (token.type == EF)
     {
-        printf("\n[ERRO] Sintaxe errada, esperava declaração da função objetiva\n\n", token.value);
+        printf("\n[ERRO] Sintaxe errada, esperava declaração da função objetiva, porém foi recebido '%s'\n\n", token.value);
         exit(EXIT_FAILURE);
     }
     else if (token.type == NL)
@@ -481,6 +481,7 @@ void nova_restricao()
 {
     token = get_token();
     if (token.type != EF)
+    {
         if (token.type == SOMA)
             escalar_restrict(1);
         else if (token.type == SUB)
@@ -534,6 +535,7 @@ void nova_restricao()
             printf("\n[ERRO] Sintaxe errada, esperava uma variavel, porém foi recebido %s\n\n", token.value);
             exit(EXIT_FAILURE);
         }
+    }
 }
 
 void continua_restrict()
