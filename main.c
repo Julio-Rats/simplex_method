@@ -16,22 +16,23 @@
 int main(int argc, char* argv[])
 {
     #ifdef _WIN32
-        SetConsoleOutputCP(65001); //UTF-8 
+        SetConsoleOutputCP(65001); //UTF-8
     #elif __linux__
         setlocale(LC_NUMERIC, "Portuguese");
         setlocale(LC_CTYPE, "Portuguese");
     #endif
 
-    srand(time(NULL));
-
     if (argc < 2)
     {
-        printf("\nPor favor, forneça o nome do arquivo a ser lido.\n\n");
-        return EXIT_FAILURE;
+        printf("\nPor favor forneça o nome do arquivo de restrições via parâmetros.\n\n");
+        printf("Uso:\n\tsimplex <arquivo.txt>\n\n");
     }
-
-    input_file(argv[1]);
-    simplex();
+    else
+    {
+        srand(time(NULL));
+        input_file(argv[1]);
+        simplex();
+    }
     
     #ifdef _WIN32
         SetConsoleOutputCP(GetConsoleOutputCP());
