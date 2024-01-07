@@ -103,7 +103,7 @@ void simplex()
         for (size_t i = 0; i < number_base; i++)
             if (var_base[i].type == ORIGINAL)
                 fx += Xb[i][0] * var_base[i].cost;
-    	    
+
         printf("\nFunção objetivo: %.4lf\n", sinal*fx);
 
         sort = 0;
@@ -124,7 +124,7 @@ void simplex()
                 }
                 if (otimo)
                     otimo = false;
-            }else if (!mult_sol && custo == 0)
+            }else if (!mult_sol && fabs(custo) <= 1e-6)
                 mult_sol = true;
         }
 
@@ -148,7 +148,7 @@ void simplex()
             {
                 if (vetor_y[i][0] <= 1e-6)
                     continue;
-                
+
                 passo = (Xb[i][0]) / (vetor_y[i][0]);
                 if (passo < menor_passo || ilimitada) // primeira verificação
                 {
@@ -157,7 +157,7 @@ void simplex()
                     ilimitada = false;
                 }
             }
-            printf("\nVetor Aj, variável %s\n", var_Nbase[variavel_entra].name);
+            printf("\nVetor Bnj, variável %s\n", var_Nbase[variavel_entra].name);
             for (size_t i = 0; i < number_base; i++)
                 printf("%.4lf\n", vetor_y[i][0]);
 
@@ -249,7 +249,7 @@ long int var_menor_custo()
 }
 
 matriz_t init_matriz(size_t m, size_t n)
-{   
+{
     matriz_t A = (matriz_t)malloc(sizeof(vetor_t)*m);
     if (!A)
     {
@@ -257,7 +257,7 @@ matriz_t init_matriz(size_t m, size_t n)
         exit(EXIT_FAILURE);
     }
     for (size_t i = 0; i < m; i++)
-        if (!(A[i] = (vetor_t)malloc(sizeof(double)*n)))
+        if (!(A[i] = (vetor_t)calloc(n, sizeof(double))))
         {
             printf("[ERRO] Falha de alocação de memoria para matriz, init_matriz()\n\n");
             exit(EXIT_FAILURE);
