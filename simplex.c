@@ -207,7 +207,7 @@ void simplex()
         }
     for (size_t i = 0; i < number_Nbase; i++)
         if (var_Nbase[i].type == ORIGINAL)
-            printf("\tVariável %s -> %.4lf\n", var_Nbase[i].name, 0);
+            printf("\tVariável %s -> %.4lf\n", var_Nbase[i].name, 0.0);
 
     printf("\n\tFunção objetivo: %.4lf\n\n", sinal * fx);
 }

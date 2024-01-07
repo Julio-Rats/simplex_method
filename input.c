@@ -98,6 +98,8 @@ void input_file(string path_file)
         exit(EXIT_FAILURE);
     }
     tipo_otimizacao();
+    while (token.type == NL)
+        token = get_token();
     restricao();
     fclose(arq);
 }
@@ -497,16 +499,24 @@ double fator() // nedd
 void restricao()
 {
     /*  [ - ] <var_restr> <tipo_des> <expr> <resto_rest>  */
+
     number_rest++;
     add_coluna_aj(var_base, number_base, number_rest);
     add_coluna_aj(var_Nbase, number_Nbase, number_rest);
-    do
+    
+    if (token.type == SUB)
     {
         token = get_token();
-    } while (token.type == NL);
-
-    var_restr(1.0);
-
+        var_restr(-1.0);
+    }
+    else if (token.type == SOMA)
+    {
+        token = get_token();
+        var_restr(1.0);
+    }
+    else
+        var_restr(1.0);
+        
     switch (tipo_des())
     {
     case MENORIGUAL:
@@ -543,7 +553,7 @@ void var_restr(int oper) // need
         fclose(arq);
         exit(EXIT_FAILURE);
     }
-
+    
     resto_eq();
 }
 
@@ -583,6 +593,9 @@ size_t tipo_des() // need
 void resto_rest()
 {
     /* !EF <restricao> | EF */
+    while (token.type == NL)
+        token = get_token();
+        
     if (token.type == EF)
         return;
     restricao();
