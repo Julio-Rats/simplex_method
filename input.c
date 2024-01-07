@@ -503,7 +503,7 @@ void restricao()
     number_rest++;
     add_coluna_aj(var_base, number_base, number_rest);
     add_coluna_aj(var_Nbase, number_Nbase, number_rest);
-    
+
     if (token.type == SUB)
     {
         token = get_token();
@@ -516,7 +516,7 @@ void restricao()
     }
     else
         var_restr(1.0);
-        
+
     switch (tipo_des())
     {
     case MENORIGUAL:
@@ -553,7 +553,7 @@ void var_restr(int oper) // need
         fclose(arq);
         exit(EXIT_FAILURE);
     }
-    
+
     resto_eq();
 }
 
@@ -595,7 +595,7 @@ void resto_rest()
     /* !EF <restricao> | EF */
     while (token.type == NL)
         token = get_token();
-        
+
     if (token.type == EF)
         return;
     restricao();
@@ -623,7 +623,7 @@ void menor_igual_rest()
 {
     matriz_t vetor_aux = init_matriz(1, number_rest);
     vetor_aux[0][number_rest - 1] = 1.0;
-    variavel_t var_folga = {0, random_var("Folga", number_folga++), FOLGA, vetor_aux};
+    variavel_t var_folga = {0.0, random_var("Folga", number_folga++), FOLGA, vetor_aux};
 
     if (++number_base == 1)
         var_base = (variavel_t *)malloc(sizeof(variavel_t));
@@ -643,7 +643,7 @@ void igual_rest()
 {
     matriz_t vetor_aux = init_matriz(1, number_rest);
     vetor_aux[0][number_rest - 1] = 1.0;
-    variavel_t var_folga = {fabs(BIGM), random_var("Artif", number_artif++), ARTIFICIAL, vetor_aux};
+    variavel_t var_folga = {fabs((double)BIGM), random_var("Artif", number_artif++), ARTIFICIAL, vetor_aux};
 
     if (++number_base == 1)
         var_base = (variavel_t *)malloc(sizeof(variavel_t));
@@ -663,7 +663,7 @@ void maior_igual_rest()
 {
     matriz_t vetor_aux = init_matriz(1, number_rest);
     vetor_aux[0][number_rest - 1] = 1.0;
-    variavel_t var_folga = {fabs(BIGM), random_var("Artif", number_artif++), ARTIFICIAL, vetor_aux};
+    variavel_t var_folga = {fabs((double)BIGM), random_var("Artif", number_artif++), ARTIFICIAL, vetor_aux};
 
     if (++number_base == 1)
         var_base = (variavel_t *)malloc(sizeof(variavel_t));
@@ -680,7 +680,7 @@ void maior_igual_rest()
 
     vetor_aux = init_matriz(1, number_rest);
     vetor_aux[0][number_rest - 1] = -1.0;
-    variavel_t var_folgaN = {fabs(BIGM), random_var("FolgaNeg", number_folgaN++), ARTIFICIAL, vetor_aux};
+    variavel_t var_folgaN = {0.0, random_var("FolgaNeg", number_folgaN++), FOLGA, vetor_aux};
 
     if (++number_Nbase == 1)
         var_Nbase = (variavel_t *)malloc(sizeof(variavel_t));
