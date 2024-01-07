@@ -1,19 +1,21 @@
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "input.h"
 
 #define STR_LEN 128
 
 /*  Global Variables  */
-variavel_t* list_var  = NULL; // Vetor auxiliar para ler restrições
-size_t len_var        = 0;    // Length do vetor_t list_var.
 size_t number_base    = 0;    // Dimensões da matriz básica (B).
 size_t number_Nbase   = 0;    // Dimensões da matriz não básica (N).
 matriz_t vetor_b      = NULL; // Vetor B.
 variavel_t* var_base  = NULL; // Variáveis básicas.
 variavel_t* var_Nbase = NULL; // Variáveis não básicas.
 char sinal;                   // Simplex.c extern var
+
+/*  Global Function  */
+matriz_t init_matriz(size_t m, size_t n); // simplex.c
 
 /*  Local Enum  */
 typedef enum
@@ -32,6 +34,7 @@ typedef enum
     NUM = 0,
     VAR,
     MULT,
+    DIV,
     SOMA,
     SUB,
     NL,
@@ -39,6 +42,8 @@ typedef enum
     MENORIGUAL,
     MAIORIGUAL,
     IGUAL,
+    ABREPAR,
+    FECHAPAR,
     ERROR
 } type_token;
 
@@ -49,36 +54,64 @@ typedef struct
     type_token type;
 } token_t;
 
-/*  Local Variables  */
+/*  Local Global Variables  */
 FILE *arq;
 token_t token;
-size_t number_artif = 1;
-size_t number_folga = 1;
-size_t number_artifN = 1;
+size_t number_rest   = 0;
+size_t number_artif  = 1;
+size_t number_folga  = 1;
+size_t number_folgaN = 1;
 
 /*  Local Functions  */
 string random_var(string prefixo, size_t index);
 token_t get_token();
 void strlower(string str);
-void uniao_var();
+void cria_var(double escalar, string name_var);
+void add_restricao(double escalar, string name_var);
+void add_coluna_aj(variavel_t *list, size_t len_list, size_t number_col);
+
 void tipo_otimizacao();
-void funcao_objetivo();
+void funcao_objetivo(int oper);
+void resto_Fx();
+double expr();
+double resto_add(double escalar);
+double mult();
+double uno();
+double resto_mult(double escalar);
+double fator();
+
 void restricao();
-void proxima();
-void operacao(int sinal_var);
-void variavel(double escalar);
-void continua_restrict();
-void nova_restricao();
-void escalar_restrict(int sinal_var);
-void variavel_restrict(double escalar);
-void menor_igual();
-void maior_igual();
-void igual();
+void var_restr(int oper);
+void resto_eq();
+size_t tipo_des();
+void resto_rest();
+void add_vet_b(double escalar);
+void menor_igual_rest();
+void igual_rest();
+void maior_igual_rest();
+
+
+void input_file(string path_file)
+{
+    if ((arq = fopen(path_file, "rt")) == NULL)
+    {
+        printf("\n[ERRO] Falha ao tentar abrir o arquivo: %s\n\n", path_file);
+        exit(EXIT_FAILURE);
+    }
+    tipo_otimizacao();
+    restricao();
+    fclose(arq);
+}
 
 string random_var(string prefixo, size_t index)
 {
     string var = (string)malloc(sizeof(char) * (strlen(prefixo) + 6));
- 
+    if (!var)
+    {
+        printf("\n[ERRO] Falha alocação de memoria, função random_var()\n\n");
+        fclose(arq);
+        exit(EXIT_FAILURE);
+    }
     sprintf(var, "%s%zu", prefixo, index);
     return var;
 }
@@ -147,6 +180,24 @@ token_t get_token()
                 token.type = MULT;
                 break;
             }
+            else if (char_atual == '/')
+            {
+                strcpy(token.value, "/");
+                token.type = DIV;
+                break;
+            }
+            else if (char_atual == '(')
+            {
+                strcpy(token.value, "(");
+                token.type = ABREPAR;
+                break;
+            }
+            else if (char_atual == ')')
+            {
+                strcpy(token.value, ")");
+                token.type = FECHAPAR;
+                break;
+            }
             else if (char_atual == '\n')
             {
                 strcpy(token.value, "(Nova Linha)");
@@ -176,7 +227,7 @@ token_t get_token()
             }
             else if ((char_atual == '.') || (char_atual == ','))
             {
-                token.value[length_char++] = ',';
+                token.value[length_char++] = '.';
                 state_atual = DNUM_O;
             }
             else
@@ -267,579 +318,459 @@ token_t get_token()
     return token;
 }
 
-void input_file(string path_file)
-{
-    if ((arq = fopen(path_file, "rt")) == NULL)
-    {
-        printf("\n[ERRO] Falha ao tentar abrir o arquivo: %s\n\n", path_file);
-        exit(EXIT_FAILURE);
-    }
-    tipo_otimizacao();
-    funcao_objetivo();
-    restricao();
-    for (size_t i = 0; i < len_var; i++)
-        if (list_var[i].aj == NULL)
-        {
-            list_var[i].aj = (matriz_t)malloc(sizeof(vetor_t));
-            list_var[i].aj[0] = (vetor_t)calloc(number_base, sizeof(double));
-        }
-    uniao_var();
-    fclose(arq);
-}
 
 void tipo_otimizacao()
 {
+    /*  <max|min|minimize|maximize> [ - ] <funcao_objetivo>  */
+
     token = get_token();
-    if (token.type == VAR)
+    if (token.type == NL)
+        tipo_otimizacao();
+    else if (token.type == VAR)
     {
         strlower(token.value);
         if ((strcmp(token.value, "min") == 0) || (strcmp(token.value, "minimize") == 0))
-        {
             sinal = 1;
-            return;
-        }
         else if ((strcmp(token.value, "max") == 0) || (strcmp(token.value, "maximize") == 0))
-        {
             sinal = -1;
-            return;
+        else
+        {
+            printf("\n[ERRO] Sintaxe errada, esperava min ou max, porém foi recebido '%s'\n\n", token.value);
+            fclose(arq);
+            exit(EXIT_FAILURE);
         }
+        token = get_token();
+        if (token.type == SUB)
+        {
+            token = get_token();
+            funcao_objetivo(-1);
+        }
+        else
+            funcao_objetivo(1);
     }
     else if (token.type == EF)
     {
         printf("\n[ERRO] Sintaxe errada, esperava declaração da função objetiva, porém foi recebido '%s'\n\n", token.value);
+        fclose(arq);
         exit(EXIT_FAILURE);
     }
-    else if (token.type == NL)
+}
+
+void funcao_objetivo(int oper) // need
+{
+    /*  [ <expr> [ * ] ] <var> <resto_Fx>  */
+
+    double escalar = 1.0;
+
+    if (token.type != VAR)
+        escalar = expr();
+
+    if (token.type == VAR)
+        cria_var(escalar*oper, token.value);
+    else
     {
-        tipo_otimizacao();
-        return;
+        printf("\n[ERRO] Sintaxe errada, esperava operador matemático ou variável, porém foi recebido '%s'\n\n", token.value);
+        fclose(arq);
+        exit(EXIT_FAILURE);
     }
-    printf("\n[ERRO] Sintaxe errada, esperava min ou max, porém foi recebido '%s'\n\n", token.value);
+
+    resto_Fx();
+}
+
+double expr() // need
+{
+    /*  <mult> <resto_add>  */
+    double escalar = mult();
+    return resto_add(escalar);
+}
+
+void resto_Fx()
+{
+    /*  + <funcao_objetivo> | - <funcao_objetivo> | NL  */
+
+    token = get_token();
+    if (token.type == SOMA)
+    {
+        token = get_token();
+        funcao_objetivo(1);
+    }
+    else if (token.type == SUB)
+    {
+        token = get_token();
+        funcao_objetivo(-1);
+    }
+    else if (token.type != NL)
+    {
+        printf("\n[ERRO] Sintaxe errada, esperava fim da função objetivo ou nova variável, porém foi recebido '%s'\n\n", token.value);
+        fclose(arq);
+        exit(EXIT_FAILURE);
+    }
+}
+
+double resto_add(double escalar)
+{
+    /*  [ + <mult> <resto_add> ] | [ - <mult> <resto_add> ] | &  */
+
+    // token = get_token();
+    if (token.type == SOMA)
+    {
+        token = get_token();
+        escalar = resto_add(escalar+mult());
+    }
+    else if (token.type == SUB)
+    {
+        token = get_token();
+        escalar = resto_add(escalar-mult());
+    }
+    return escalar;
+}
+
+double mult() // need
+{
+    /*  <uno> <resto_mult>  */
+    double escalar = uno();
+    return resto_mult(escalar);
+}
+
+double uno() // need
+{
+    /*  +<uno> | -<uno> | fator */
+    double escalar;
+    if (token.type == SOMA)
+    {
+        token = get_token();
+        escalar = uno();
+    }
+    else if (token.type == SUB)
+    {
+        token = get_token();
+        escalar = -uno();
+    }
+    else
+        escalar = fator();
+
+    return escalar;
+}
+
+double resto_mult(double escalar)
+{
+    /*  [ * <uno> <resto_mult> ] | [ / <uno> <resto_mult> ] | &  */
+    token = get_token();
+    if (token.type == MULT)
+    {
+        token = get_token();
+        escalar = resto_mult(escalar*uno());
+    }
+    else if (token.type == DIV)
+    {
+        token = get_token();
+        double aux = uno();
+        if (aux == 0)
+        {
+            printf("\n[ERRO] Divisão por zero no arquivo de restrições\n\n");
+            fclose(arq);
+            exit(EXIT_FAILURE);
+        }
+        escalar = resto_mult(escalar/aux);
+    }
+    return escalar;
+}
+
+double fator() // nedd
+{
+    /*  NUM | VAR | (  */
+    if (token.type == NUM)
+        return atof(token.value);
+    else if (token.type == VAR)
+        return (double)1.0;
+    else if (token.type == ABREPAR)
+    {
+        token = get_token();
+        double aux = expr();
+        if (token.type != FECHAPAR)
+        {
+            printf("\n[ERRO] Sintaxe errada, esperava fecha parêntese, porém foi recebido '%s'\n\n", token.value);
+            fclose(arq);
+            exit(EXIT_FAILURE);
+        }
+        return aux;
+    }
+
+    printf("\n[ERRO] Sintaxe errada, esperava uma expressão, porém foi recebido '%s'\n\n", token.value);
+    fclose(arq);
     exit(EXIT_FAILURE);
 }
 
-void funcao_objetivo()
-{
-    token = get_token();
-    if (token.type == SOMA)
-        operacao(1);
-    else if (token.type == SUB)
-        operacao(-1);
-    else if (token.type == NUM)
-        variavel(atof(token.value));
-    else if (token.type == VAR)
-    {
-        variavel_t aux;
-        aux.cost = (double)sinal;
-        aux.name = (string)malloc(sizeof(char) * (strlen(token.value) + 1));
-        aux.aj = NULL;
-        strcpy(aux.name, token.value);
-        aux.type = ORIGINAL;
-        if (len_var == 0)
-            list_var = (variavel_t*)malloc(sizeof(variavel_t) * (++len_var));
-        else
-            list_var = (variavel_t*)realloc(list_var, sizeof(variavel_t) * (++len_var));
-        list_var[len_var - 1] = aux;
-        proxima();
-    }
-    else
-    {
-        printf("\n[ERRO] Sintaxe errada, esperava um escalar ou uma variavel, porém foi recebido %s\n\n", token.value);
-        exit(EXIT_FAILURE);
-    }
-}
-
-void proxima()
-{
-    token = get_token();
-    if (token.type == SOMA)
-        operacao(1);
-    else if (token.type == SUB)
-        operacao(-1);
-    else if (token.type != NL)
-    {
-        printf("\n[ERRO] Sintaxe errada, esperava um escalar ou uma variavel, porém foi recebido %s\n\n", token.value);
-        exit(EXIT_FAILURE);
-    }
-}
-
-void operacao(int sinal_var)
-{
-    token = get_token();
-    if (token.type == NUM)
-        variavel((double)(atof(token.value) * sinal_var));
-    else if (token.type == VAR)
-    {
-        variavel_t aux;
-        aux.cost = (double)(sinal * sinal_var);
-        aux.name = (string)malloc(sizeof(char) * (strlen(token.value) + 1));
-        aux.aj = NULL;
-        strcpy(aux.name, token.value);
-        aux.type = ORIGINAL;
-        if (len_var == 0)
-            list_var = (variavel_t*)malloc(sizeof(variavel_t) * (++len_var));
-        else
-            list_var = (variavel_t*)realloc(list_var, sizeof(variavel_t) * (++len_var));
-        list_var[len_var - 1] = aux;
-        proxima();
-    }
-    else
-    {
-        printf("\n[ERRO] Sintaxe errada, esperava um escalar ou uma variavel, porém foi recebido %s\n\n", token.value);
-        exit(EXIT_FAILURE);
-    }
-}
-
-void variavel(double escalar)
-{
-    token = get_token();
-    if (token.type == MULT)
-        token = get_token();
-    if (token.type == VAR)
-    {
-        variavel_t aux;
-        aux.cost = (double)(sinal * escalar);
-        aux.name = (string)malloc(sizeof(char) * (strlen(token.value) + 1));
-        aux.aj = NULL;
-        strcpy(aux.name, token.value);
-        aux.type = ORIGINAL;
-        if (len_var == 0)
-            list_var = (variavel_t*)malloc(sizeof(variavel_t) * (++len_var));
-        else
-            list_var = (variavel_t*)realloc(list_var, sizeof(variavel_t) * (++len_var));
-        list_var[len_var - 1] = aux;
-        proxima();
-    }
-    else
-    {
-        printf("\n[ERRO] Sintaxe errada, esperava uma variavel, porém foi recebido %s\n\n", token.value);
-        exit(EXIT_FAILURE);
-    }
-}
 
 void restricao()
 {
-    while (token.type == NL)
+    /*  [ - ] <var_restr> <tipo_des> <expr> <resto_rest>  */
+
+    number_rest++;
+    // add_coluna_aj(list_var, len_var, number_rest);
+    add_coluna_aj(var_base, number_base, number_rest);
+    add_coluna_aj(var_Nbase, number_Nbase, number_rest);
+    do
+    {
         token = get_token();
-    if (token.type == EF)
-    {
-        printf("\n[ERRO] Sintaxe errada, esperava conjunto de restrição\n\n");
-        exit(EXIT_FAILURE);
-    }
-    if (token.type == SOMA)
-        escalar_restrict(1);
-    else if (token.type == SUB)
-        escalar_restrict(-1);
-    else if (token.type == NUM)
-        variavel_restrict((double)atof(token.value));
-    else if (token.type == VAR)
-    {
-        bool exist = false;
-        for (size_t i = 0; i < len_var; i++)
-            if (strcmp(list_var[i].name, token.value) == 0)
-            {
-                exist = true;
-                if (list_var[i].aj == NULL)
-                {
-                    list_var[i].aj = (matriz_t)malloc(sizeof(vetor_t));
-                    list_var[i].aj[0] = (vetor_t)calloc((number_base + 1), sizeof(double));
-                }
-                else
-                {
-                    list_var[i].aj[0] = (vetor_t)realloc(list_var[i].aj[0], sizeof(double) * (number_base + 1));
-                }
-                list_var[i].aj[0][number_base] = 1;
-                break;
-            }
-        if (!exist)
-        {
-            if (len_var == 0)
-                list_var = (variavel_t*)malloc(sizeof(variavel_t) * (++len_var));
-            else
-                list_var = (variavel_t*)realloc(list_var, sizeof(variavel_t) * (++len_var));
+    } while (token.type == NL);
+    
+    var_restr(1.0);
 
-            matriz_t vetor_aux = (matriz_t)malloc(sizeof(vetor_t));
-            vetor_aux[0] = (vetor_t)calloc(number_base + 1, sizeof(double));
-            vetor_aux[0][number_base] = 1;
-
-            variavel_t aux = {0, NULL, ORIGINAL, vetor_aux};
-            aux.name = (string)malloc(sizeof(char) * (strlen(token.value) + 1));
-            strcpy(aux.name, token.value);
-
-            list_var[len_var - 1] = aux;
-        }
-        continua_restrict();
-    }
-    else
+    switch (tipo_des())
     {
-        printf("\n[ERRO] Sintaxe errada, esperava uma variavel, porém foi recebido %s\n\n", token.value);
-        exit(EXIT_FAILURE);
+        case MENORIGUAL:
+            menor_igual_rest();
+        break;
+        
+        case IGUAL:
+            igual_rest();
+        break;
+
+        case MAIORIGUAL:
+            maior_igual_rest();
+        break;
     }
+
+    token = get_token();
+    add_vet_b(expr());
+    resto_rest();
 }
 
-void nova_restricao()
+void var_restr(int oper) // need
 {
-    token = get_token();
-    if (token.type != EF)
-    {
-        if (token.type == SOMA)
-            escalar_restrict(1);
-        else if (token.type == SUB)
-            escalar_restrict(-1);
-        else if (token.type == NUM)
-            variavel_restrict((double)atof(token.value));
-        else if (token.type == VAR)
-        {
-            bool exist = false;
-            for (size_t i = 0; i < len_var; i++)
-                if (strcmp(list_var[i].name, token.value) == 0)
-                {
-                    exist = true;
-                    if (list_var[i].aj == NULL)
-                    {
-                        list_var[i].aj = (matriz_t)malloc(sizeof(vetor_t));
-                        list_var[i].aj[0] = (vetor_t)calloc((number_base + 1), sizeof(double));
-                    }
-                    else
-                    {
-                        list_var[i].aj[0] = (vetor_t)realloc(list_var[i].aj[0], sizeof(double) * (number_base + 1));
-                    }
-                    list_var[i].aj[0][number_base] = 1;
-                    break;
-                }
-            if (!exist)
-            {
-                if (len_var == 0)
-                    list_var = (variavel_t*)malloc(sizeof(variavel_t) * (++len_var));
-                else
-                    list_var = (variavel_t*)realloc(list_var, sizeof(variavel_t) * (++len_var));
+    /*  [ <expr> [ * ] ] <var> <resto_eq>  */
 
-                matriz_t vetor_aux = (matriz_t)malloc(sizeof(vetor_t));
-                vetor_aux[0] = (vetor_t)calloc(number_base + 1, sizeof(double));
-                vetor_aux[0][number_base] = 1;
+    double escalar = 1.0;
 
-                variavel_t aux = {0, NULL, ORIGINAL, vetor_aux};
-                aux.name = (string)malloc(sizeof(char) * (strlen(token.value) + 1));
-                strcpy(aux.name, token.value);
-
-                list_var[len_var - 1] = aux;
-            }
-            continua_restrict();
-        }
-        else if (token.type == NL)
-        {
-            nova_restricao();
-        }
-        else 
-        {
-            printf("\n[ERRO] Sintaxe errada, esperava uma variavel, porém foi recebido %s\n\n", token.value);
-            exit(EXIT_FAILURE);
-        }
-    }
-}
-
-void continua_restrict()
-{
-    token = get_token();
-    if (token.type == SOMA)
-        escalar_restrict(1);
-    else if (token.type == SUB)
-        escalar_restrict(-1);
-    else if (token.type == MENORIGUAL)
-        menor_igual();
-    else if (token.type == MAIORIGUAL)
-        maior_igual();
-    else if (token.type == IGUAL)
-        igual();
-    else if (token.type == MULT)
-    {
-        printf("\n[ERRO] Sintaxe errada, esperava um escalar ou uma variavel, porém foi recebido %s\n\n", token.value);
-        exit(EXIT_FAILURE);
-    }
-    else if (token.type == VAR)
-    {
-        printf("\n[ERRO] Sintaxe errada, esperava um escalar ou uma variavel, porém foi recebido %s\n\n", token.value);
-        exit(EXIT_FAILURE);
-    }
-    else
-    {
-        printf("\n[ERRO] Sintaxe errada, esperava uma variavel ou sinal ou simbolo de igualdade ou desigualdade, porém foi recebido '%s'\n\n", token.value);
-        exit(EXIT_FAILURE);
-    }
-}
-
-void escalar_restrict(int sinal_var)
-{
-    token = get_token();
-    if (token.type == NUM)
-        variavel_restrict((double)(atof(token.value) * sinal_var));
-    else if (token.type == VAR)
-    {
-        bool exist = false;
-        for (size_t i = 0; i < len_var; i++)
-            if (strcmp(list_var[i].name, token.value) == 0)
-            {
-                exist = true;
-                if (list_var[i].aj == NULL)
-                {
-                    list_var[i].aj = (matriz_t)malloc(sizeof(vetor_t));
-                    list_var[i].aj[0] = (vetor_t)calloc((number_base + 1), sizeof(double));
-                }
-                else
-                {
-                    list_var[i].aj[0] = (vetor_t)realloc(list_var[i].aj[0], sizeof(double) * (number_base + 1));
-                }
-                list_var[i].aj[0][number_base] = (double)sinal_var;
-                break;
-            }
-        if (!exist)
-        {
-            if (len_var == 0)
-                list_var = (variavel_t*)malloc(sizeof(variavel_t) * (++len_var));
-            else
-                list_var = (variavel_t*)realloc(list_var, sizeof(variavel_t) * (++len_var));
-
-            matriz_t vetor_aux = (matriz_t)malloc(sizeof(vetor_t));
-            vetor_aux[0] = (vetor_t)calloc(number_base + 1, sizeof(double));
-            vetor_aux[0][number_base] = (double)sinal_var;
-
-            variavel_t aux = {0, NULL, ORIGINAL, vetor_aux};
-            aux.name = (string)malloc(sizeof(char) * (strlen(token.value) + 1));
-            strcpy(aux.name, token.value);
-            list_var[len_var - 1] = aux;
-        }
-        continua_restrict();
-    }
-    else
-    {
-        printf("\n[ERRO] Sintaxe errada, esperava um escalar ou uma variavel, porém foi recebido %s\n\n", token.value);
-        exit(EXIT_FAILURE);
-    }
-}
-
-void variavel_restrict(double escalar)
-{
-    token = get_token();
-    if (token.type == MULT)
-        token = get_token();
+    if (token.type != VAR)
+        escalar = expr();
 
     if (token.type == VAR)
+        add_restricao(escalar*oper, token.value);
+    else
     {
-        bool exist = false;
-        for (size_t i = 0; i < len_var; i++)
-            if (strcmp(list_var[i].name, token.value) == 0)
+        printf("\n[ERRO] Sintaxe errada, esperava operador matemático ou variável, porém foi recebido '%s'\n\n", token.value);
+        fclose(arq);
+        exit(EXIT_FAILURE);
+    }
+
+    resto_eq();
+}
+
+void resto_eq()
+{
+    /*  + <var_restr> | - <var_restr> | &  */
+
+    token = get_token();
+    if (token.type == SOMA)
+    {
+        token = get_token();
+        var_restr(1);
+    }
+    else if (token.type == SUB)
+    {
+        token = get_token();
+        var_restr(-1);
+    }
+}
+
+size_t tipo_des() // need
+{
+    /*  <= | = | >=  */
+    // printf("%s\n", token.value);
+    if (token.type == MENORIGUAL)
+        return MENORIGUAL;
+    else if (token.type == IGUAL)
+        return IGUAL;
+    else if (token.type == MAIORIGUAL)
+        return MAIORIGUAL;
+    else
+    {
+        printf("\n[ERRO] Sintaxe errada, esperava operador matemático ou variável, porém foi recebido '%s'\n\n", token.value);
+        fclose(arq);
+        exit(EXIT_FAILURE);
+    }
+}
+
+void resto_rest()
+{
+    /* !EF <restricao> | EF */
+    // token = get_token();
+    if (token.type == EF)
+        return;
+    restricao();
+}
+
+void add_vet_b(double escalar)
+{
+    if (number_rest == 1)
+        vetor_b = (matriz_t)malloc(sizeof(vetor_t));
+    else
+        vetor_b = (matriz_t)realloc(vetor_b, sizeof(vetor_t)*number_rest);
+
+    if (!vetor_b)
+    {
+        printf("\n[ERRO] Falha alocação de memoria, função add_vet_b()\n\n");
+        fclose(arq);
+        exit(EXIT_FAILURE);
+    }
+
+    vetor_b[number_rest-1] = (vetor_t)malloc(sizeof(double));
+    vetor_b[number_rest-1][0] = escalar;
+}
+
+void menor_igual_rest()
+{
+    matriz_t vetor_aux = init_matriz(1, number_rest);
+    vetor_aux[0][number_rest-1] = 1.0;
+    variavel_t var_folga = {0, random_var("Folga", number_folga++), FOLGA, vetor_aux};
+
+    if (++number_base == 1)
+        var_base = (variavel_t*)malloc(sizeof(variavel_t));
+    else
+        var_base = (variavel_t*)realloc(var_base, sizeof(variavel_t)*number_base);
+
+    if (!var_base)
+    {
+        printf("\n[ERRO] Falha alocação de memoria, função menor_igual_rest()\n\n");
+        fclose(arq);
+        exit(EXIT_FAILURE);
+    }
+    var_base[number_base-1] = var_folga;
+}
+
+void igual_rest()
+{
+    matriz_t vetor_aux = init_matriz(1, number_rest);
+    vetor_aux[0][number_rest-1] = 1.0;
+    variavel_t var_folga =  {fabs(BIGM), random_var("Artif", number_artif++), ARTIFICIAL, vetor_aux};
+
+    if (++number_base == 1)
+        var_base = (variavel_t*)malloc(sizeof(variavel_t));
+    else
+        var_base = (variavel_t*)realloc(var_base, sizeof(variavel_t)*number_base);
+
+    if (!var_base)
+    {
+        printf("\n[ERRO] Falha alocação de memoria, função menor_igual_rest()\n\n");
+        fclose(arq);
+        exit(EXIT_FAILURE);
+    }
+    var_base[number_base-1] = var_folga;
+}
+
+void maior_igual_rest()
+{
+    matriz_t vetor_aux = init_matriz(1, number_rest);
+    vetor_aux[0][number_rest-1] = 1.0;
+    variavel_t var_folga =  {fabs(BIGM), random_var("Artif", number_artif++), ARTIFICIAL, vetor_aux};
+
+    if (++number_base == 1)
+        var_base = (variavel_t*)malloc(sizeof(variavel_t));
+    else
+        var_base = (variavel_t*)realloc(var_base, sizeof(variavel_t)*number_base);
+
+    if (!var_base)
+    {
+        printf("\n[ERRO] Falha alocação de memoria, função menor_igual_rest()\n\n");
+        fclose(arq);
+        exit(EXIT_FAILURE);
+    }
+    var_base[number_base-1] = var_folga;
+
+    vetor_aux = init_matriz(1, number_rest);
+    vetor_aux[0][number_rest-1] = -1.0;
+    variavel_t var_folgaN =  {fabs(BIGM), random_var("FolgaNeg", number_folgaN++), ARTIFICIAL, vetor_aux};
+
+    if (++number_Nbase == 1)
+        var_Nbase = (variavel_t*)malloc(sizeof(variavel_t));
+    else
+        var_Nbase = (variavel_t*)realloc(var_Nbase, sizeof(variavel_t)*number_Nbase);
+
+    if (!var_Nbase)
+    {
+        printf("\n[ERRO] Falha alocação de memoria, função menor_igual_rest()\n\n");
+        fclose(arq);
+        exit(EXIT_FAILURE);
+    }
+    var_Nbase[number_Nbase-1] = var_folgaN;
+}
+
+
+void cria_var(double escalar, string name_var)
+{
+    for (size_t i = 0; i < number_Nbase; i++)
+        if (strcmp(name_var, var_Nbase[i].name) == 0)
             {
-                exist = true;
-                if (list_var[i].aj == NULL)
-                {
-                    list_var[i].aj = (matriz_t)malloc(sizeof(vetor_t));
-                    list_var[i].aj[0] = (vetor_t)calloc((number_base + 1), sizeof(double));
-                }
-                else
-                {
-                    list_var[i].aj[0] = (vetor_t)realloc(list_var[i].aj[0], sizeof(double) * (number_base + 1));
-                }
-                list_var[i].aj[0][number_base] = escalar;
-                break;
+                printf("\n[ERRO] Variável utilizada mais de uma vez na função objetivo, variável '%s\n\n", name_var);
+                fclose(arq);
+                exit(EXIT_FAILURE);
             }
-        if (!exist)
-        {
-            if (len_var == 0)
-                list_var = (variavel_t*)malloc(sizeof(variavel_t) * (++len_var));
-            else
-                list_var = (variavel_t*)realloc(list_var, sizeof(variavel_t) * (++len_var));
 
-            matriz_t vetor_aux = (matriz_t)malloc(sizeof(vetor_t));
-            vetor_aux[0] = (vetor_t)calloc(number_base + 1, sizeof(double));
-            vetor_aux[0][number_base] = escalar;
+    variavel_t var;
+    var.cost = (double)(sinal * escalar);
+    var.name = (string)malloc(sizeof(char) * (strlen(token.value) + 1));
+    var.type = ORIGINAL;
+    var.aj   = (matriz_t)malloc(sizeof(vetor_t));
 
-            variavel_t aux = {0, NULL, ORIGINAL, vetor_aux};
-            aux.name = (string)malloc(sizeof(char) * (strlen(token.value) + 1));
-            strcpy(aux.name, token.value);
-
-            list_var[len_var - 1] = aux;
-        }
-        continua_restrict();
-    }
-    else
+    if (!var.name || !var.aj)
     {
-        printf("\n[ERRO] Sintaxe errada, esperava uma variavel, porém foi recebido %s\n\n", token.value);
+        printf("\n[ERRO] Falha alocação de memoria, função cria_var()\n\n");
+        fclose(arq);
         exit(EXIT_FAILURE);
     }
+    strcpy(var.name, token.value);
+    
+    if (++number_Nbase == 1)
+        var_Nbase = (variavel_t*)malloc(sizeof(variavel_t));
+    else
+        var_Nbase = (variavel_t*)realloc(var_Nbase, sizeof(variavel_t) * number_Nbase);
+
+    if (!var_Nbase)
+    {
+        printf("\n[ERRO] Falha alocação de memoria, função cria_var()\n\n");
+        fclose(arq);
+        exit(EXIT_FAILURE);
+    }
+    var_Nbase[number_Nbase - 1] = var;
 }
 
-void menor_igual()
+void add_restricao(double escalar, string name_var)
 {
-    token = get_token();
-    if (token.type == NUM)
+    bool existe = false;
+    size_t var_id;
+    for (size_t i = 0; i < number_Nbase; i++)
+        if (strcmp(name_var, var_Nbase[i].name) == 0)
+        {
+            existe = true;
+            var_id = i;
+            break;
+        }
+    if (!existe)
     {
-        for (size_t i = 0; i < number_base; i++)
-        {
-            var_base[i].aj[0] = (vetor_t)realloc(var_base[i].aj[0], sizeof(double) * (number_base + 1));
-            var_base[i].aj[0][number_base] = 0;
-        }
-
-        if (number_base == 0)
-        {
-            var_base = (variavel_t*)malloc(sizeof(variavel_t) * (++number_base));
-            vetor_b = (matriz_t)malloc(sizeof(vetor_t) * (number_base));
-            vetor_b[0] = (vetor_t)malloc(sizeof(double));
-        }
-        else
-        {
-            var_base = (variavel_t*)realloc(var_base, sizeof(variavel_t) * (++number_base));
-            vetor_b = (matriz_t)realloc(vetor_b, sizeof(vetor_t) * (number_base));
-            vetor_b[number_base - 1] = (vetor_t)malloc(sizeof(double));
-        }
-        vetor_b[number_base - 1][0] = (double)atof(token.value);
-
-        matriz_t vetor_aux = (matriz_t)malloc(sizeof(vetor_t));
-        vetor_aux[0] = (vetor_t)calloc(number_base, sizeof(double));
-        vetor_aux[0][number_base - 1] = 1;
-
-        variavel_t aux = {0, random_var("Folga", number_folga++), FOLGA, vetor_aux};
-        var_base[number_base - 1] = aux;
-    }
-    else
-    {
-        printf("\n[ERRO] Sintaxe errada, esperava um valor apos o menor igual, porém foi recebido %s\n\n", token.value);
+        printf("\n[ERRO] Variável desconhecida utilizada nas restrições, variável '%s'\n\n", name_var);
+        fclose(arq);
         exit(EXIT_FAILURE);
     }
-
-    token = get_token();
-    if (token.type != NL && token.type != EF)
-    {
-        printf("\n[ERRO] Sintaxe errada, esperava uma nova linha de restrição, porém foi recebido %s\n\n", token.value);
-        exit(EXIT_FAILURE);
-    }
-    nova_restricao();
+    var_Nbase[var_id].aj[0][number_rest-1] += escalar;
 }
 
-void maior_igual()
+void add_coluna_aj(variavel_t *list, size_t len_list, size_t number_col)
 {
-    token = get_token();
-    if (token.type == NUM)
+    for (size_t i = 0; i < len_list; i++)
     {
-        for (size_t i = 0; i < number_base; i++)
-        {
-            var_base[i].aj[0] = (vetor_t)realloc(var_base[i].aj[0], sizeof(double) * (number_base + 1));
-            var_base[i].aj[0][number_base] = 0;
-        }
-
-        for (size_t i = 0; i < number_Nbase; i++)
-        {
-            var_Nbase[i].aj[0] = (vetor_t)realloc(var_Nbase[i].aj[0], sizeof(double) * (number_base + 1));
-            var_Nbase[i].aj[0][number_base] = 0;
-        }
-
-        if (number_base == 0)
-        {
-            var_base = (variavel_t*)malloc(sizeof(variavel_t) * (++number_base));
-            vetor_b = (matriz_t)malloc(sizeof(vetor_t) * (number_base));
-            vetor_b[0] = (vetor_t)malloc(sizeof(double));
-        }
+        if (number_col == 1)
+            list[i].aj[0] = (vetor_t)malloc(sizeof(double));
         else
+            list[i].aj[0] = (vetor_t)realloc(list[i].aj[0], sizeof(double)*number_col);
+
+        if (!list[i].aj[0])
         {
-            var_base = (variavel_t*)realloc(var_base, sizeof(variavel_t) * (++number_base));
-            vetor_b = (matriz_t)realloc(vetor_b, sizeof(vetor_t) * (number_base));
-            vetor_b[number_base - 1] = (vetor_t)malloc(sizeof(double));
+            printf("\n[ERRO] Falha alocação de memoria, função add_coluna_aj()\n\n");
+            fclose(arq);
+            exit(EXIT_FAILURE);
         }
-        vetor_b[number_base - 1][0] = (double)atof(token.value);
-
-        matriz_t vetor_aux = (matriz_t)malloc(sizeof(vetor_t));
-        vetor_aux[0] = (vetor_t)calloc(number_base, sizeof(double));
-        vetor_aux[0][number_base - 1] = 1;
-
-        variavel_t aux = {(double)abs(BIGM), random_var("Artif", number_artif++), ARTIFICIAL, vetor_aux};
-        var_base[number_base - 1] = aux;
-
-        if (number_Nbase == 0)
-            var_Nbase = (variavel_t*)malloc(sizeof(variavel_t) * (++number_Nbase));
-        else
-            var_Nbase = (variavel_t*)realloc(var_Nbase, sizeof(variavel_t) * (++number_Nbase));
-
-        vetor_aux = (matriz_t)malloc(sizeof(vetor_t));
-        vetor_aux[0] = (vetor_t)calloc(number_base, sizeof(double));
-        vetor_aux[0][number_base - 1] = -1;
-
-        variavel_t aux1 = {0, random_var("FolgaNeg", number_artifN++), FOLGA, vetor_aux};
-        var_Nbase[number_Nbase - 1] = aux1;
+        list[i].aj[0][number_col-1] = 0;
     }
-    else
-    {
-        printf("\n[ERRO] Sintaxe errada, esperava um valor apos o maior igual, porém foi recebido %s\n\n", token.value);
-        exit(EXIT_FAILURE);
-    }
-
-    token = get_token();
-    if (token.type != NL && token.type != EF)
-    {
-        printf("\n[ERRO] Sintaxe errada, esperava uma nova linha de restrição, porém foi recebido %s\n\n", token.value);
-        exit(EXIT_FAILURE);
-    }
-    nova_restricao();
-}
-
-void igual()
-{
-    token = get_token();
-    if (token.type == NUM)
-    {
-        for (size_t i = 0; i < number_base; i++)
-        {
-            var_base[i].aj[0] = (vetor_t)realloc(var_base[i].aj[0], sizeof(double) * (number_base + 1));
-            var_base[i].aj[0][number_base] = 0;
-        }
-
-        for (size_t i = 0; i < number_Nbase; i++)
-        {
-            var_Nbase[i].aj[0] = (vetor_t)realloc(var_Nbase[i].aj[0], sizeof(double) * (number_base + 1));
-            var_Nbase[i].aj[0][number_base] = 0;
-        }
-
-        if (number_base == 0)
-        {
-            var_base = (variavel_t*)malloc(sizeof(variavel_t) * (++number_base));
-            vetor_b = (matriz_t)malloc(sizeof(vetor_t) * (number_base));
-            vetor_b[0] = (vetor_t)malloc(sizeof(double));
-        }
-        else
-        {
-            var_base = (variavel_t*)realloc(var_base, sizeof(variavel_t) * (++number_base));
-            vetor_b = (matriz_t)realloc(vetor_b, sizeof(vetor_t) * (number_base));
-            vetor_b[number_base - 1] = (vetor_t)malloc(sizeof(double));
-        }
-        vetor_b[number_base - 1][0] = (double)atof(token.value);
-
-        matriz_t vetor_aux = (matriz_t)malloc(sizeof(vetor_t));
-        vetor_aux[0] = (vetor_t)calloc(number_base, sizeof(double));
-        vetor_aux[0][number_base - 1] = 1;
-
-        variavel_t aux = {(double)abs(BIGM), random_var("Artif", number_artif++), ARTIFICIAL, vetor_aux};
-        var_base[number_base - 1] = aux;
-    }
-    else
-    {
-        printf("\n[ERRO] Sintaxe errada, esperava um valor apos a igualdade, porém foi recebido %s\n\n", token.value);
-        exit(EXIT_FAILURE);
-    }
-
-    token = get_token();
-    if (token.type != NL && token.type != EF)
-    {
-        printf("\n[ERRO] Sintaxe errada, esperava uma nova linha de restrição, porém foi recebido %s\n\n", token.value);
-        exit(EXIT_FAILURE);
-    }
-    nova_restricao();
-}
-
-void uniao_var()
-{
-    var_Nbase = (variavel_t*)realloc(var_Nbase, sizeof(variavel_t) * (len_var + number_Nbase));
-    for (size_t i = number_Nbase, j = 0; i < (len_var + number_Nbase); j++, i++)
-        var_Nbase[i] = list_var[j];
-
-    number_Nbase += len_var;
-    free(list_var);
-    len_var = 0;
 }
