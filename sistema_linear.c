@@ -4,6 +4,24 @@
 
 #include "sistema_linear.h"
 
+matriz_t init_matriz(size_t m, size_t n)
+{
+    matriz_t A = (matriz_t)malloc(sizeof(vetor_t) * m);
+    if (!A)
+    {
+        printf("[ERRO] Falha de alocação de memoria para matriz, init_matriz()\n\n");
+        exit(EXIT_FAILURE);
+    }
+    for (size_t i = 0; i < m; i++)
+        if (!(A[i] = (vetor_t)calloc(n, sizeof(double))))
+        {
+            printf("[ERRO] Falha de alocação de memoria para matriz, init_matriz()\n\n");
+            exit(EXIT_FAILURE);
+        }
+
+    return A;
+}
+
 matriz_t solver_LU(matriz_t LU, size_t *vpermut, matriz_t x, matriz_t b, size_t n)
 {
     /*

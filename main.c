@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "structs.h"
+
 #ifdef _WIN32
     #include <windows.h>
 #elif __linux__
@@ -10,9 +12,12 @@
     #error "OS Not Supported"
 #endif
 
-#include "input.h"
-#include "simplex.h"
+/*  Global Function  */
+void input_file(string path_file); // input.c
+void simplex();                    // simplex.c
 
+
+/* Main Program */
 int main(int argc, char* argv[])
 {
     #ifdef _WIN32

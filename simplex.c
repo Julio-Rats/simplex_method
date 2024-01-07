@@ -3,18 +3,19 @@
 #include <limits.h>
 #include <math.h>
 
-#include "simplex.h"
+#include "sistema_linear.h" // includes together "structs.h" 
 
 /*  Global Variable  */
 extern char sinal; // input.c
 
-/*  Local Variables  */
+/*  Local Struct  */
 typedef struct
 {
     double valor;
     size_t variavel;
 } custo_t; // Tuple (value, index)
 
+/*  Local Variables  */
 custo_t *custos = NULL;
 size_t len_custos = 0;
 size_t sort = 0;
@@ -22,7 +23,6 @@ size_t sort = 0;
 /*  Local Functions  */
 void lista_custo_iguais(double valor, size_t var);
 long int var_menor_custo();
-matriz_t init_matriz(size_t m, size_t n);
 
 void simplex()
 {
@@ -254,22 +254,4 @@ long int var_menor_custo()
         return custos[sort++].variavel;
     else
         return -1;
-}
-
-matriz_t init_matriz(size_t m, size_t n)
-{
-    matriz_t A = (matriz_t)malloc(sizeof(vetor_t) * m);
-    if (!A)
-    {
-        printf("[ERRO] Falha de alocação de memoria para matriz, init_matriz()\n\n");
-        exit(EXIT_FAILURE);
-    }
-    for (size_t i = 0; i < m; i++)
-        if (!(A[i] = (vetor_t)calloc(n, sizeof(double))))
-        {
-            printf("[ERRO] Falha de alocação de memoria para matriz, init_matriz()\n\n");
-            exit(EXIT_FAILURE);
-        }
-
-    return A;
 }

@@ -2,7 +2,7 @@
 #include <string.h>
 #include <math.h>
 
-#include "input.h"
+#include "structs.h"
 
 #define STR_LEN 128
 
@@ -15,7 +15,7 @@ variavel_t *var_Nbase = NULL; // Variáveis não básicas.
 char sinal;                   // Simplex.c extern var
 
 /*  Global Function  */
-matriz_t init_matriz(size_t m, size_t n); // simplex.c
+matriz_t init_matriz(size_t m, size_t n); // sistema_linear.c
 
 /*  Local Enum  */
 typedef enum
@@ -54,7 +54,7 @@ typedef struct
     type_token type;
 } token_t;
 
-/*  Local Global Variables  */
+/*  Local Variables  */
 FILE *arq;
 token_t token;
 size_t number_rest = 0;
