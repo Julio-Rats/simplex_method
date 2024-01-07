@@ -7,11 +7,11 @@
 #define STR_LEN 128
 
 /*  Global Variables  */
-size_t number_base    = 0;    // Dimensões da matriz básica (B).
-size_t number_Nbase   = 0;    // Dimensões da matriz não básica (N).
-matriz_t vetor_b      = NULL; // Vetor B.
-variavel_t* var_base  = NULL; // Variáveis básicas.
-variavel_t* var_Nbase = NULL; // Variáveis não básicas.
+size_t number_base = 0;       // Dimensões da matriz básica (B).
+size_t number_Nbase = 0;      // Dimensões da matriz não básica (N).
+matriz_t vetor_b = NULL;      // Vetor B.
+variavel_t *var_base = NULL;  // Variáveis básicas.
+variavel_t *var_Nbase = NULL; // Variáveis não básicas.
 char sinal;                   // Simplex.c extern var
 
 /*  Global Function  */
@@ -57,9 +57,9 @@ typedef struct
 /*  Local Global Variables  */
 FILE *arq;
 token_t token;
-size_t number_rest   = 0;
-size_t number_artif  = 1;
-size_t number_folga  = 1;
+size_t number_rest = 0;
+size_t number_artif = 1;
+size_t number_folga = 1;
 size_t number_folgaN = 1;
 
 /*  Local Functions  */
@@ -89,7 +89,6 @@ void add_vet_b(double escalar);
 void menor_igual_rest();
 void igual_rest();
 void maior_igual_rest();
-
 
 void input_file(string path_file)
 {
@@ -311,18 +310,16 @@ token_t get_token()
         if (feof(arq))
         {
             token.type = EF;
-            strcpy(token.value,"(Final de Arquivo)");
+            strcpy(token.value, "(Final de Arquivo)");
             break;
         }
     }
     return token;
 }
 
-
 void tipo_otimizacao()
 {
     /*  <max|min|minimize|maximize> [ - ] <funcao_objetivo>  */
-
     token = get_token();
     if (token.type == NL)
         tipo_otimizacao();
@@ -359,14 +356,13 @@ void tipo_otimizacao()
 void funcao_objetivo(int oper) // need
 {
     /*  [ <expr> [ * ] ] <var> <resto_Fx>  */
-
     double escalar = 1.0;
 
     if (token.type != VAR)
         escalar = expr();
 
     if (token.type == VAR)
-        cria_var(escalar*oper, token.value);
+        cria_var(escalar * oper, token.value);
     else
     {
         printf("\n[ERRO] Sintaxe errada, esperava operador matemático ou variável, porém foi recebido '%s'\n\n", token.value);
@@ -387,7 +383,6 @@ double expr() // need
 void resto_Fx()
 {
     /*  + <funcao_objetivo> | - <funcao_objetivo> | NL  */
-
     token = get_token();
     if (token.type == SOMA)
     {
@@ -410,17 +405,15 @@ void resto_Fx()
 double resto_add(double escalar)
 {
     /*  [ + <mult> <resto_add> ] | [ - <mult> <resto_add> ] | &  */
-
-    // token = get_token();
     if (token.type == SOMA)
     {
         token = get_token();
-        escalar = resto_add(escalar+mult());
+        escalar = resto_add(escalar + mult());
     }
     else if (token.type == SUB)
     {
         token = get_token();
-        escalar = resto_add(escalar-mult());
+        escalar = resto_add(escalar - mult());
     }
     return escalar;
 }
@@ -459,7 +452,7 @@ double resto_mult(double escalar)
     if (token.type == MULT)
     {
         token = get_token();
-        escalar = resto_mult(escalar*uno());
+        escalar = resto_mult(escalar * uno());
     }
     else if (token.type == DIV)
     {
@@ -471,7 +464,7 @@ double resto_mult(double escalar)
             fclose(arq);
             exit(EXIT_FAILURE);
         }
-        escalar = resto_mult(escalar/aux);
+        escalar = resto_mult(escalar / aux);
     }
     return escalar;
 }
@@ -501,34 +494,31 @@ double fator() // nedd
     exit(EXIT_FAILURE);
 }
 
-
 void restricao()
 {
     /*  [ - ] <var_restr> <tipo_des> <expr> <resto_rest>  */
-
     number_rest++;
-    // add_coluna_aj(list_var, len_var, number_rest);
     add_coluna_aj(var_base, number_base, number_rest);
     add_coluna_aj(var_Nbase, number_Nbase, number_rest);
     do
     {
         token = get_token();
     } while (token.type == NL);
-    
+
     var_restr(1.0);
 
     switch (tipo_des())
     {
-        case MENORIGUAL:
-            menor_igual_rest();
-        break;
-        
-        case IGUAL:
-            igual_rest();
+    case MENORIGUAL:
+        menor_igual_rest();
         break;
 
-        case MAIORIGUAL:
-            maior_igual_rest();
+    case IGUAL:
+        igual_rest();
+        break;
+
+    case MAIORIGUAL:
+        maior_igual_rest();
         break;
     }
 
@@ -540,14 +530,13 @@ void restricao()
 void var_restr(int oper) // need
 {
     /*  [ <expr> [ * ] ] <var> <resto_eq>  */
-
     double escalar = 1.0;
 
     if (token.type != VAR)
         escalar = expr();
 
     if (token.type == VAR)
-        add_restricao(escalar*oper, token.value);
+        add_restricao(escalar * oper, token.value);
     else
     {
         printf("\n[ERRO] Sintaxe errada, esperava operador matemático ou variável, porém foi recebido '%s'\n\n", token.value);
@@ -561,7 +550,6 @@ void var_restr(int oper) // need
 void resto_eq()
 {
     /*  + <var_restr> | - <var_restr> | &  */
-
     token = get_token();
     if (token.type == SOMA)
     {
@@ -578,7 +566,6 @@ void resto_eq()
 size_t tipo_des() // need
 {
     /*  <= | = | >=  */
-    // printf("%s\n", token.value);
     if (token.type == MENORIGUAL)
         return MENORIGUAL;
     else if (token.type == IGUAL)
@@ -596,7 +583,6 @@ size_t tipo_des() // need
 void resto_rest()
 {
     /* !EF <restricao> | EF */
-    // token = get_token();
     if (token.type == EF)
         return;
     restricao();
@@ -607,7 +593,7 @@ void add_vet_b(double escalar)
     if (number_rest == 1)
         vetor_b = (matriz_t)malloc(sizeof(vetor_t));
     else
-        vetor_b = (matriz_t)realloc(vetor_b, sizeof(vetor_t)*number_rest);
+        vetor_b = (matriz_t)realloc(vetor_b, sizeof(vetor_t) * number_rest);
 
     if (!vetor_b)
     {
@@ -616,20 +602,20 @@ void add_vet_b(double escalar)
         exit(EXIT_FAILURE);
     }
 
-    vetor_b[number_rest-1] = (vetor_t)malloc(sizeof(double));
-    vetor_b[number_rest-1][0] = escalar;
+    vetor_b[number_rest - 1] = (vetor_t)malloc(sizeof(double));
+    vetor_b[number_rest - 1][0] = escalar;
 }
 
 void menor_igual_rest()
 {
     matriz_t vetor_aux = init_matriz(1, number_rest);
-    vetor_aux[0][number_rest-1] = 1.0;
+    vetor_aux[0][number_rest - 1] = 1.0;
     variavel_t var_folga = {0, random_var("Folga", number_folga++), FOLGA, vetor_aux};
 
     if (++number_base == 1)
-        var_base = (variavel_t*)malloc(sizeof(variavel_t));
+        var_base = (variavel_t *)malloc(sizeof(variavel_t));
     else
-        var_base = (variavel_t*)realloc(var_base, sizeof(variavel_t)*number_base);
+        var_base = (variavel_t *)realloc(var_base, sizeof(variavel_t) * number_base);
 
     if (!var_base)
     {
@@ -637,19 +623,19 @@ void menor_igual_rest()
         fclose(arq);
         exit(EXIT_FAILURE);
     }
-    var_base[number_base-1] = var_folga;
+    var_base[number_base - 1] = var_folga;
 }
 
 void igual_rest()
 {
     matriz_t vetor_aux = init_matriz(1, number_rest);
-    vetor_aux[0][number_rest-1] = 1.0;
-    variavel_t var_folga =  {fabs(BIGM), random_var("Artif", number_artif++), ARTIFICIAL, vetor_aux};
+    vetor_aux[0][number_rest - 1] = 1.0;
+    variavel_t var_folga = {fabs(BIGM), random_var("Artif", number_artif++), ARTIFICIAL, vetor_aux};
 
     if (++number_base == 1)
-        var_base = (variavel_t*)malloc(sizeof(variavel_t));
+        var_base = (variavel_t *)malloc(sizeof(variavel_t));
     else
-        var_base = (variavel_t*)realloc(var_base, sizeof(variavel_t)*number_base);
+        var_base = (variavel_t *)realloc(var_base, sizeof(variavel_t) * number_base);
 
     if (!var_base)
     {
@@ -657,19 +643,19 @@ void igual_rest()
         fclose(arq);
         exit(EXIT_FAILURE);
     }
-    var_base[number_base-1] = var_folga;
+    var_base[number_base - 1] = var_folga;
 }
 
 void maior_igual_rest()
 {
     matriz_t vetor_aux = init_matriz(1, number_rest);
-    vetor_aux[0][number_rest-1] = 1.0;
-    variavel_t var_folga =  {fabs(BIGM), random_var("Artif", number_artif++), ARTIFICIAL, vetor_aux};
+    vetor_aux[0][number_rest - 1] = 1.0;
+    variavel_t var_folga = {fabs(BIGM), random_var("Artif", number_artif++), ARTIFICIAL, vetor_aux};
 
     if (++number_base == 1)
-        var_base = (variavel_t*)malloc(sizeof(variavel_t));
+        var_base = (variavel_t *)malloc(sizeof(variavel_t));
     else
-        var_base = (variavel_t*)realloc(var_base, sizeof(variavel_t)*number_base);
+        var_base = (variavel_t *)realloc(var_base, sizeof(variavel_t) * number_base);
 
     if (!var_base)
     {
@@ -677,16 +663,16 @@ void maior_igual_rest()
         fclose(arq);
         exit(EXIT_FAILURE);
     }
-    var_base[number_base-1] = var_folga;
+    var_base[number_base - 1] = var_folga;
 
     vetor_aux = init_matriz(1, number_rest);
-    vetor_aux[0][number_rest-1] = -1.0;
-    variavel_t var_folgaN =  {fabs(BIGM), random_var("FolgaNeg", number_folgaN++), ARTIFICIAL, vetor_aux};
+    vetor_aux[0][number_rest - 1] = -1.0;
+    variavel_t var_folgaN = {fabs(BIGM), random_var("FolgaNeg", number_folgaN++), ARTIFICIAL, vetor_aux};
 
     if (++number_Nbase == 1)
-        var_Nbase = (variavel_t*)malloc(sizeof(variavel_t));
+        var_Nbase = (variavel_t *)malloc(sizeof(variavel_t));
     else
-        var_Nbase = (variavel_t*)realloc(var_Nbase, sizeof(variavel_t)*number_Nbase);
+        var_Nbase = (variavel_t *)realloc(var_Nbase, sizeof(variavel_t) * number_Nbase);
 
     if (!var_Nbase)
     {
@@ -694,25 +680,24 @@ void maior_igual_rest()
         fclose(arq);
         exit(EXIT_FAILURE);
     }
-    var_Nbase[number_Nbase-1] = var_folgaN;
+    var_Nbase[number_Nbase - 1] = var_folgaN;
 }
-
 
 void cria_var(double escalar, string name_var)
 {
     for (size_t i = 0; i < number_Nbase; i++)
         if (strcmp(name_var, var_Nbase[i].name) == 0)
-            {
-                printf("\n[ERRO] Variável utilizada mais de uma vez na função objetivo, variável '%s\n\n", name_var);
-                fclose(arq);
-                exit(EXIT_FAILURE);
-            }
+        {
+            printf("\n[ERRO] Variável utilizada mais de uma vez na função objetivo, variável '%s\n\n", name_var);
+            fclose(arq);
+            exit(EXIT_FAILURE);
+        }
 
     variavel_t var;
     var.cost = (double)(sinal * escalar);
     var.name = (string)malloc(sizeof(char) * (strlen(token.value) + 1));
     var.type = ORIGINAL;
-    var.aj   = (matriz_t)malloc(sizeof(vetor_t));
+    var.aj = (matriz_t)malloc(sizeof(vetor_t));
 
     if (!var.name || !var.aj)
     {
@@ -721,11 +706,11 @@ void cria_var(double escalar, string name_var)
         exit(EXIT_FAILURE);
     }
     strcpy(var.name, token.value);
-    
+
     if (++number_Nbase == 1)
-        var_Nbase = (variavel_t*)malloc(sizeof(variavel_t));
+        var_Nbase = (variavel_t *)malloc(sizeof(variavel_t));
     else
-        var_Nbase = (variavel_t*)realloc(var_Nbase, sizeof(variavel_t) * number_Nbase);
+        var_Nbase = (variavel_t *)realloc(var_Nbase, sizeof(variavel_t) * number_Nbase);
 
     if (!var_Nbase)
     {
@@ -753,7 +738,7 @@ void add_restricao(double escalar, string name_var)
         fclose(arq);
         exit(EXIT_FAILURE);
     }
-    var_Nbase[var_id].aj[0][number_rest-1] += escalar;
+    var_Nbase[var_id].aj[0][number_rest - 1] += escalar;
 }
 
 void add_coluna_aj(variavel_t *list, size_t len_list, size_t number_col)
@@ -763,7 +748,7 @@ void add_coluna_aj(variavel_t *list, size_t len_list, size_t number_col)
         if (number_col == 1)
             list[i].aj[0] = (vetor_t)malloc(sizeof(double));
         else
-            list[i].aj[0] = (vetor_t)realloc(list[i].aj[0], sizeof(double)*number_col);
+            list[i].aj[0] = (vetor_t)realloc(list[i].aj[0], sizeof(double) * number_col);
 
         if (!list[i].aj[0])
         {
@@ -771,6 +756,6 @@ void add_coluna_aj(variavel_t *list, size_t len_list, size_t number_col)
             fclose(arq);
             exit(EXIT_FAILURE);
         }
-        list[i].aj[0][number_col-1] = 0;
+        list[i].aj[0][number_col - 1] = 0;
     }
 }

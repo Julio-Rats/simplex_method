@@ -13,11 +13,11 @@ typedef struct
 {
     double valor;
     size_t variavel;
-} custo_t;  // Tuple (value, index)
+} custo_t; // Tuple (value, index)
 
-custo_t* custos      = NULL;
-size_t len_custos    = 0;
-size_t sort          = 0;
+custo_t *custos = NULL;
+size_t len_custos = 0;
+size_t sort = 0;
 
 /*  Local Functions  */
 void lista_custo_iguais(double valor, size_t var);
@@ -26,16 +26,21 @@ matriz_t init_matriz(size_t m, size_t n);
 
 void simplex()
 {
-    matriz_t matriz_Base    = init_matriz(number_base, number_base);           // (B) Matriz com as j colunas de A, das j variáveis básicas.
+    matriz_t matriz_Base = init_matriz(number_base, number_base);              // (B) Matriz com as j colunas de A, das j variáveis básicas.
     matriz_t matriz_Base_tr = (matriz_t)malloc(sizeof(vetor_t) * number_base); // (B^t) Matriz Básica transposta.
+    matriz_t matriz_Base_lu = init_matriz(number_base, number_base);           // Decomposição LU de B
+    matriz_t matriz_Base_tr_lu = init_matriz(number_base, number_base);        // Decomposição LU de B^t
 
-    matriz_t lambda         = init_matriz(number_base, 1); // cb^t*B^-1
-    matriz_t var_Nbase_tr   = init_matriz(number_base, 1); // (Aj)^t; Coluna j de A da variáveis não básicas.
-    matriz_t custo_basico_A = init_matriz(1, 1); // ci^t*B^-1*Aj, j var não básica, i variável básica.
+    matriz_t lambda = init_matriz(number_base, 1);       // cb^t*B^-1
+    matriz_t var_Nbase_tr = init_matriz(number_base, 1); // (Aj)^t; Coluna j de A da variáveis não básicas.
+    matriz_t custo_basico_A = init_matriz(1, 1);         // ci^t*B^-1*Aj, j var não básica, i variável básica.
 
-    matriz_t Xb      = init_matriz(number_base, 1); // x = B^-1*b
+    matriz_t Xb = init_matriz(number_base, 1);      // x = B^-1*b
     matriz_t vetor_y = init_matriz(number_base, 1); // y = B^-1*Aj ; j não básicos.
-    matriz_t coef    = init_matriz(number_base, 1); // c ; min c^t*x
+    matriz_t coef = init_matriz(number_base, 1);    // c ; min c^t*x
+
+    size_t vpermut_tr[number_base];
+    size_t vpermut[number_base];
 
     bool mult_sol = false;
 
@@ -64,7 +69,10 @@ void simplex()
         }
 
         transposta(matriz_Base_tr, matriz_Base, number_base, number_base);
-        decomposicao_LU(matriz_Base_tr, lambda, coef, number_base);
+        decomposicao_LU(matriz_Base, matriz_Base_lu, vpermut, number_base);
+        decomposicao_LU(matriz_Base_tr, matriz_Base_tr_lu, vpermut_tr, number_base);
+
+        solver_LU(matriz_Base_tr_lu, vpermut_tr, lambda, coef, number_base);
 
         printf("Coeficientes Básicos (Cb):\n");
         for (size_t i = 0; i < number_base; i++)
@@ -93,7 +101,7 @@ void simplex()
             len_custos = 0;
         }
 
-        decomposicao_LU(matriz_Base, Xb, vetor_b, number_base); // vetor_b -> input.h
+        solver_LU(matriz_Base_lu, vpermut, Xb, vetor_b, number_base);
 
         printf("\nVetor x = B^-1 * b :\n");
         for (size_t i = 0; i < number_base; i++)
@@ -101,10 +109,9 @@ void simplex()
 
         fx = 0;
         for (size_t i = 0; i < number_base; i++)
-            if (var_base[i].type == ORIGINAL)
-                fx += Xb[i][0] * var_base[i].cost;
+            fx += Xb[i][0] * var_base[i].cost;
 
-        printf("\nFunção objetivo: %.4lf\n", sinal*fx);
+        printf("\nFunção objetivo: %.4lf\n", sinal * fx);
 
         sort = 0;
         bool otimo = true;
@@ -124,7 +131,8 @@ void simplex()
                 }
                 if (otimo)
                     otimo = false;
-            }else if (!mult_sol && fabs(custo) <= 1e-6)
+            }
+            else if (!mult_sol && fabs(custo) <= 1e-6)
                 mult_sol = true;
         }
 
@@ -141,8 +149,8 @@ void simplex()
                 exit(EXIT_SUCCESS);
             }
 
-
-            decomposicao_LU(matriz_Base, vetor_y, transposta(var_Nbase[variavel_entra].aj, var_Nbase_tr, 1, number_base), number_base);
+            transposta(var_Nbase[variavel_entra].aj, var_Nbase_tr, 1, number_base);
+            solver_LU(matriz_Base_lu, vpermut, vetor_y, var_Nbase_tr, number_base);
 
             for (size_t i = 0; i < number_base; i++)
             {
@@ -152,7 +160,7 @@ void simplex()
                 passo = (Xb[i][0]) / (vetor_y[i][0]);
                 if (passo < menor_passo || ilimitada) // primeira verificação
                 {
-                    menor_passo  = passo;
+                    menor_passo = passo;
                     variavel_sai = i;
                     ilimitada = false;
                 }
@@ -199,16 +207,16 @@ void simplex()
         }
     for (size_t i = 0; i < number_Nbase; i++)
         if (var_Nbase[i].type == ORIGINAL)
-            printf("\tVariável %s -> 0\n", var_Nbase[i].name);
+            printf("\tVariável %s -> %.4lf\n", var_Nbase[i].name, 0);
 
-    printf("\n\tFunção objetivo: %.4lf\n\n", sinal*fx);
+    printf("\n\tFunção objetivo: %.4lf\n\n", sinal * fx);
 }
 
 void lista_custo_iguais(double valor, size_t var)
 {
     if (len_custos == 0)
     {
-        if (!(custos = (custo_t*)malloc(sizeof(custo_t))))
+        if (!(custos = (custo_t *)malloc(sizeof(custo_t))))
         {
             printf("[ERRO] Falha alocação de memoria para lista de custo, função lista_custo_iguais()\n\n");
             exit(EXIT_FAILURE);
@@ -250,7 +258,7 @@ long int var_menor_custo()
 
 matriz_t init_matriz(size_t m, size_t n)
 {
-    matriz_t A = (matriz_t)malloc(sizeof(vetor_t)*m);
+    matriz_t A = (matriz_t)malloc(sizeof(vetor_t) * m);
     if (!A)
     {
         printf("[ERRO] Falha de alocação de memoria para matriz, init_matriz()\n\n");

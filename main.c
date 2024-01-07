@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
         input_file(argv[1]);
         simplex();
     }
-    
+
     #ifdef _WIN32
         SetConsoleOutputCP(GetConsoleOutputCP());
     #endif
