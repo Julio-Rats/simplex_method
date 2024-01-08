@@ -1,33 +1,35 @@
 # Implementação do Método Simplex
 
-Este repositório contém uma implementação em C do Método Simplex para otimização de funções lineares. O Método Simplex é um algoritmo utilizado para resolver problemas de pesquisa operacional (PO) na qual pode ser usado para maximizar ou minimizar uma função objetivo sujeita a um conjunto de restrições lineares de suas varáveis.
+This repository contains a C implementation of the Simplex Method for optimizing linear functions. The Simplex Method is an algorithm used to solve operational research (OP) problems in which it can be used to maximize or minimize an objective function subject to a set of linear restrictions on its variables.
 
-Para utilizar o programa, basta fornecer um arquivo texto contendo a função objetivo e as restrições via parâmetro. O arquivo deve conter o seguinte formato:
+To use the program, simply provide a text file containing the objective function with the restrictions and pass it via parameter.
+The file must contain the following format:
 ~~~txt
 max 5x1 + 3x2
 
 2x1 + x2 <= 10
 x1 + 3x2 <= 12
 ~~~
-A declaração da função objetivo pode-se usar **max**, **maximize**, **min** ou **minimize**.
-### Todas variáveis estão sujeitas a '>= 0', logo colocar restrições de não negatividade no arquivo de restrições é redundância.
+The declaration of the objective function can be used **max**, **maximize**, **min** or **minimize**.
+### All variables are subject to '>= 0', so placing non-negativity constraints in the constraints file is redundancy.
 
 
-## Compilar e executar o programa:
+## Compile and run the program:
 
-A compilação pode ser feita através do **Makefile** usando programa **make**, ou manualmente acessando
-a pasta com terminal e usando o compilador, exemplo:
+Compilation can be done through the **Makefile** using the **make** program, or manually by accessing
+the folder with terminal and using the compiler.
+Example of a manual compilation:
 ~~~sh
 gcc -c *.o
 gcc *.o -o simplex.exe
 ~~~
 
-Esses comando irá gerar o executável simplex.exe, no qual deve ser passado por parâmetro o arquivo
-com a função objetivo e suas restrições
+These commands will generate the simplex.exe executable, in which the file must be passed as a parameter
+with the objective function and its restrictions.
 ~~~sh
-simplex.exe restricoes.txt
+simplex.exe restrictions.txt
 ~~~
 
-O programa executará mostrando os passos executáveis em notação matricial, dando no final a solução
-se está existir, vale ressaltar que o método ainda NÂO trata casos degenerados, não mostrando todas
-as soluções em caso de múltiplas soluções.
+The program will execute showing the executable steps in matrix notation, giving the solution at the end.
+if it exists, it is worth highlighting that the method still DOES NOT treat degenerate cases, not showing all
+solutions in case of multiple solutions.

@@ -4,32 +4,32 @@
 
 #include "sistema_linear.h"
 
-matriz_t init_matriz(size_t m, size_t n)
+matrix_t init_matriz(size_t m, size_t n)
 {
-    matriz_t A = (matriz_t)malloc(sizeof(vetor_t) * m);
+    matrix_t A = (matrix_t)malloc(sizeof(vector_t) * m);
     if (!A)
     {
-        printf("[ERRO] Falha de alocação de memoria para matriz, init_matriz()\n\n");
+        printf("\n[ERROR] Memory allocation failure for matrix, init_matriz()\n\n");
         exit(EXIT_FAILURE);
     }
     for (size_t i = 0; i < m; i++)
-        if (!(A[i] = (vetor_t)calloc(n, sizeof(double))))
+        if (!(A[i] = (vector_t)calloc(n, sizeof(double))))
         {
-            printf("[ERRO] Falha de alocação de memoria para matriz, init_matriz()\n\n");
+            printf("\n[ERROR] Memory allocation failure for matrix, init_matriz()\n\n");
             exit(EXIT_FAILURE);
         }
 
     return A;
 }
 
-matriz_t solver_LU(matriz_t LU, size_t *vpermut, matriz_t x, matriz_t b, size_t n)
+matrix_t solver_LU(matrix_t LU, size_t *vpermut, matrix_t x, matrix_t b, size_t n)
 {
     /*
-        Ax = b, Resolve o sistema usando decomposição LU
-        LUx = b (Linhas de b ajustadas com as permutadas durante construção da LU, vetor vpermut)
+        Ax = b, Solve the system using LU decomposition
+        LUx = b (Lines of b adjusted with those permuted during construction of the LU, vector vpermut)
 
-        obs: Usando x e b como matriz por conveniência de operação entre matrizes, sem necessidade de operação
-            entre matrizes e vetores, um vetor de i elementos é uma matriz de índice [k][0] (vetor coluna)
+        Note: Using x and b as matrices for the convenience of operations between matrices, without the need for operations
+            between matrices and vectors, a vector of i elements is a matrix with index [i][0] (column vector)
     */
     double b_permut[n];
 
@@ -62,12 +62,12 @@ matriz_t solver_LU(matriz_t LU, size_t *vpermut, matriz_t x, matriz_t b, size_t 
     return x;
 }
 
-matriz_t decomposicao_LU(matriz_t A, matriz_t LU, size_t *vpermut, size_t n)
+matrix_t decomposicao_LU(matrix_t A, matrix_t LU, size_t *vpermut, size_t n)
 {
     /*
-        Decompõem A em LU.
+       Decompose A into LU.
 
-        vpermut vetor de indices nas quais linhas foram permutadas durante a decomposição.
+        vpermut vector of indices at which rows were permuted during decomposition.
     */
     for (size_t i = 0; i < n; i++)
     {
@@ -88,7 +88,7 @@ matriz_t decomposicao_LU(matriz_t A, matriz_t LU, size_t *vpermut, size_t n)
 
         if (fabs(pivo) < 1e-6)
         {
-            printf("[ERRO] Matriz de restrições A é singular, sistema não possível !\n");
+            printf("[ERROR] Constraint matrix A is singular, system not possible!\n\n");
             exit(EXIT_FAILURE);
         }
 
@@ -118,7 +118,7 @@ matriz_t decomposicao_LU(matriz_t A, matriz_t LU, size_t *vpermut, size_t n)
     return LU;
 }
 
-matriz_t multi_matriz(matriz_t A, matriz_t B, matriz_t dest, size_t m, size_t n, size_t r)
+matrix_t multi_matriz(matrix_t A, matrix_t B, matrix_t dest, size_t m, size_t n, size_t r)
 {
     for (size_t i = 0; i < m; i++)
         for (size_t k = 0; k < r; k++)
@@ -131,7 +131,7 @@ matriz_t multi_matriz(matriz_t A, matriz_t B, matriz_t dest, size_t m, size_t n,
     return dest;
 }
 
-matriz_t multi_escalar(matriz_t src, double escalar, matriz_t dest, size_t m, size_t n)
+matrix_t multi_escalar(matrix_t src, double escalar, matrix_t dest, size_t m, size_t n)
 {
     for (size_t i = 0; i < m; i++)
         for (size_t j = 0; j < n; j++)
@@ -140,7 +140,7 @@ matriz_t multi_escalar(matriz_t src, double escalar, matriz_t dest, size_t m, si
     return dest;
 }
 
-matriz_t transposta(matriz_t src, matriz_t dest, size_t m, size_t n)
+matrix_t transposta(matrix_t src, matrix_t dest, size_t m, size_t n)
 {
     for (size_t i = 0; i < m; i++)
         for (size_t j = 0; j < n; j++)

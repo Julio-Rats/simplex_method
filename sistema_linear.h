@@ -3,11 +3,11 @@
 
 #include "structs.h"
 
-matriz_t init_matriz(size_t m, size_t n);
-matriz_t decomposicao_LU(matriz_t A, matriz_t LU, size_t *vpermut, size_t n);
-matriz_t solver_LU(matriz_t LU, size_t *vpermut, matriz_t x, matriz_t b, size_t n);
-matriz_t multi_matriz(matriz_t A, matriz_t B, matriz_t dest, size_t m, size_t n, size_t r);
-matriz_t multi_escalar(matriz_t src, double escalar, matriz_t dest, size_t m, size_t n);
-matriz_t transposta(matriz_t src, matriz_t dest, size_t m, size_t n);
+matrix_t init_matriz(size_t m, size_t n);
+matrix_t decomposicao_LU(matrix_t A, matrix_t LU, size_t *vpermut, size_t n);
+matrix_t solver_LU(matrix_t LU, size_t *vpermut, matrix_t x, matrix_t b, size_t n);
+matrix_t multi_matriz(matrix_t A, matrix_t B, matrix_t dest, size_t m, size_t n, size_t r);
+matrix_t multi_escalar(matrix_t src, double escalar, matrix_t dest, size_t m, size_t n);
+matrix_t transposta(matrix_t src, matrix_t dest, size_t m, size_t n);
 
 #endif

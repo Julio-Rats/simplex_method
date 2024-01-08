@@ -29,8 +29,8 @@ int main(int argc, char* argv[])
 
     if (argc < 2)
     {
-        printf("\nPor favor forneça o nome do arquivo de restrições via parâmetros.\n\n");
-        printf("Uso:\n\tsimplex <arquivo.txt>\n\n");
+        printf("\nPlease provide the constraints file name via parameters.\n\n");
+        printf("Uso:\n\tsimplex <file.txt>\n\n");
     }
     else
     {

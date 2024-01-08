@@ -10,8 +10,8 @@
 
 typedef char bool;
 typedef char *string;
-typedef double *vetor_t;
-typedef double **matriz_t;
+typedef double *vector_t;
+typedef double **matrix_t;
 
 typedef enum
 {
@@ -22,16 +22,16 @@ typedef enum
 
 typedef struct
 {
-    double cost;    // Custo na função objetivo (C);
-    string name;    // Nome da variável, ex: "x1", "x2".
-    vartype_e type; // Tipo da variável (Folga ou Artificial).
-    double **aj;    // Coluna com suas restrições.
+    double cost;    // Cost in objective function (C)
+    string name;    // Variable name, ex: "x1", "x2".
+    vartype_e type; // Variable type (Original, Slack or Artificial).
+    double **aj;    // Column with its restrictions.
 } variavel_t;
 
-extern size_t number_base;    // Dimensão da matriz básica (B).
-extern size_t number_Nbase;   // Dimensão da matriz não básica (N).
-extern double **vetor_b;      // Vetor B
-extern variavel_t *var_base;  // variáveis básicas.
-extern variavel_t *var_Nbase; // variáveis não básicas.
+extern size_t number_base;    // Dimension of the basic matrix (B).
+extern size_t number_Nbase;   // Non-basic matrix dimension (N).
+extern double **vetor_b;      // Vector b, from the system Ax=b.
+extern variavel_t *var_base;  // Basic variables.
+extern variavel_t *var_Nbase; // Non-basic variables.
 
 #endif

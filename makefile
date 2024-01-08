@@ -11,11 +11,11 @@ default: all
 all:
 	$(MAKE) $(TARGET)
 
-# Regras para gerar o executável
+# Rules for generating the executable
 $(TARGET): $(OBJFILES)
 	$(CC) $(OBJFILES) -o $(TARGET)
 
-# Regras de compilação
+# Compilation rules
 input.o: input.c structs.h
 	$(CC) $(MYFLAGS) -c input.c
 

@@ -3,7 +3,7 @@
 #include <limits.h>
 #include <math.h>
 
-#include "sistema_linear.h" // includes together "structs.h" 
+#include "sistema_linear.h" // includes together "structs.h"
 
 /*  Global Variable  */
 extern char sinal; // input.c
@@ -26,18 +26,18 @@ long int var_menor_custo();
 
 void simplex()
 {
-    matriz_t matriz_Base = init_matriz(number_base, number_base);              // (B) Matriz com as j colunas de A, das j variáveis básicas.
-    matriz_t matriz_Base_tr = (matriz_t)malloc(sizeof(vetor_t) * number_base); // (B^t) Matriz Básica transposta.
-    matriz_t matriz_Base_lu = init_matriz(number_base, number_base);           // Decomposição LU de B
-    matriz_t matriz_Base_tr_lu = init_matriz(number_base, number_base);        // Decomposição LU de B^t
+    matrix_t matriz_Base = init_matriz(number_base, number_base);               // (B) Matrix with the j columns of A, of the j basic variables.
+    matrix_t matriz_Base_tr = (matrix_t)malloc(sizeof(vector_t) * number_base); // (B^t) Transposed Basic Matrix.
+    matrix_t matriz_Base_lu = init_matriz(number_base, number_base);            // LU decomposition of B
+    matrix_t matriz_Base_tr_lu = init_matriz(number_base, number_base);         // LU decomposition of B^t
 
-    matriz_t lambda = init_matriz(number_base, 1);       // cb^t*B^-1
-    matriz_t var_Nbase_tr = init_matriz(number_base, 1); // (Aj)^t; Coluna j de A da variáveis não básicas.
-    matriz_t custo_basico_A = init_matriz(1, 1);         // ci^t*B^-1*Aj, j var não básica, i variável básica.
+    matrix_t lambda = init_matriz(number_base, 1);       // cb^t*B^-1
+    matrix_t var_Nbase_tr = init_matriz(number_base, 1); // (Aj)^t | Column j of A of non-basic variables.
+    matrix_t custo_basico_A = init_matriz(1, 1);         // ci^t*B^-1*Aj | j var non-basic, i basic variable.
 
-    matriz_t Xb = init_matriz(number_base, 1);      // x = B^-1*b
-    matriz_t vetor_y = init_matriz(number_base, 1); // y = B^-1*Aj ; j não básicos.
-    matriz_t coef = init_matriz(number_base, 1);    // c ; min c^t*x
+    matrix_t Xb = init_matriz(number_base, 1);      // x = B^-1*b
+    matrix_t vetor_y = init_matriz(number_base, 1); // y = B^-1*Aj | j non-basic.
+    matrix_t coef = init_matriz(number_base, 1);    // c ; min c^t*x
 
     size_t vpermut_tr[number_base];
     size_t vpermut[number_base];
@@ -45,18 +45,18 @@ void simplex()
     bool mult_sol = false;
 
     size_t iter = 1;
-    double fx = 0.f; // valor função objetivo
+    double fx = 0.f; // objective function value
 
     while (true)
     {
-        printf("\t\t%zuª ITERAÇÃO\n\n", iter++);
+        printf("\t\t%zuª ITERATION\n\n", iter++);
 
-        printf("Variáveis Básicas \t B[");
+        printf("Basic Variables \t B[");
         for (size_t i = 0; i < number_base - 1; i++)
             printf("%s, ", var_base[i].name);
 
         printf("%s]\n", var_base[number_base - 1].name);
-        printf("Variáveis não Básicas \t N[");
+        printf("Non-Basic Variables \t N[");
         for (size_t i = 0; i < number_Nbase - 1; i++)
             printf("%s, ", var_Nbase[i].name);
 
@@ -74,11 +74,11 @@ void simplex()
 
         solver_LU(matriz_Base_tr_lu, vpermut_tr, lambda, coef, number_base);
 
-        printf("Coeficientes Básicos (Cb):\n");
+        printf("Basic Coefficients (Cb):\n");
         for (size_t i = 0; i < number_base; i++)
             printf("%.4lf\n", coef[i][0]);
 
-        printf("\nMatriz B = [A[j]] | Para todo j básico:");
+        printf("\nMatrix B = [A[j]] | For all basic j:");
         for (size_t i = 0; i < number_base; i++)
         {
             printf("\n");
@@ -103,7 +103,7 @@ void simplex()
 
         solver_LU(matriz_Base_lu, vpermut, Xb, vetor_b, number_base);
 
-        printf("\nVetor x = B^-1 * b :\n");
+        printf("\nVector x = B^-1 * b :\n");
         for (size_t i = 0; i < number_base; i++)
             printf("%.4lf\n", Xb[i][0]);
 
@@ -111,17 +111,17 @@ void simplex()
         for (size_t i = 0; i < number_base; i++)
             fx += Xb[i][0] * var_base[i].cost;
 
-        printf("\nFunção objetivo: %.4lf\n", sinal * fx);
+        printf("\nObjective function value: %.4lf\n", sinal * fx);
 
         sort = 0;
         bool otimo = true;
 
-        printf("\nCustos (Cn[j] - A[j]^t * lambda | j não básicos)\n");
+        printf("\nCosts (Cn[j] - A[j]^t * lambda | j non-basic)\n");
         for (size_t i = 0; i < number_Nbase; i++)
         {
             multi_matriz(var_Nbase[i].aj, lambda, custo_basico_A, 1, number_base, 1);
             custo = var_Nbase[i].cost - custo_basico_A[0][0];
-            printf("Custo Var: %s -> %.4lf\n", var_Nbase[i].name, custo);
+            printf("Var Cost: %s -> %.4lf\n", var_Nbase[i].name, custo);
             if (custo < 0)
             {
                 if (custo <= menor_custo)
@@ -140,12 +140,12 @@ void simplex()
             break;
 
         bool ilimitada = true;
-        double passo, menor_passo = 0; // warning safe (warning uninitialized)
+        double passo, menor_passo = 0; // safe warning (warning uninitialized)
         do
         {
             if ((variavel_entra = var_menor_custo()) == -1)
             {
-                printf("\n\n\tSolução ILIMITADA\n\n");
+                printf("\n\n\tUNLIMITED Solution\n\n");
                 exit(EXIT_SUCCESS);
             }
 
@@ -158,26 +158,26 @@ void simplex()
                     continue;
 
                 passo = (Xb[i][0]) / (vetor_y[i][0]);
-                if (passo < menor_passo || ilimitada) // primeira verificação
+                if (passo < menor_passo || ilimitada) // first check
                 {
                     menor_passo = passo;
                     variavel_sai = i;
                     ilimitada = false;
                 }
             }
-            printf("\nVetor Bnj, variável %s\n", var_Nbase[variavel_entra].name);
+            printf("\nBnj vector, variable %s\n", var_Nbase[variavel_entra].name);
             for (size_t i = 0; i < number_base; i++)
                 printf("%.4lf\n", vetor_y[i][0]);
 
             if (ilimitada)
-                printf("\nNão achou nenhum Y positivo\n");
+                printf("\nDidn't find any positive Y\n");
 
         } while (ilimitada);
 
-        printf("\nResumo da Interação:\n\n");
-        printf("Menor custo %.4lf, variável %s\n", menor_custo, var_Nbase[variavel_entra].name);
-        printf("Menor passo %.4lf (min = {x[i]/Aj[i]} | Para todo Aj[i] > 0), variável %s\n", menor_passo, var_base[variavel_sai].name);
-        printf("Nessa iteração entra variável %s e sai variável %s da base\n\n", var_Nbase[variavel_entra].name, var_base[variavel_sai].name);
+        printf("\nInteraction Summary:\n\n");
+        printf("Lower cost %.4lf, variable %s\n", menor_custo, var_Nbase[variavel_entra].name);
+        printf("Smallest step %.4lf (min = {x[i]/Aj[i]} | For all Aj[i] > 0), variable %s\n", menor_passo, var_base[variavel_sai].name);
+        printf("In this iteration variable %s enters and variable %s leaves the base\n\n", var_Nbase[variavel_entra].name, var_base[variavel_sai].name);
 
         variavel_t aux = var_Nbase[variavel_entra];
         var_Nbase[variavel_entra] = var_base[variavel_sai];
@@ -188,28 +188,28 @@ void simplex()
     for (size_t i = 0; i < number_base; i++)
         if (var_base[i].type == ARTIFICIAL && Xb[i][0])
         {
-            printf("\nVariável Artificial (não nula) no fim da otimização, problema INFACTÍVEL !!!\n\n");
+            printf("\nArtificial variable (non-zero) at the end of optimization, INFACTABLE problem !!!\n\n");
             exit(EXIT_FAILURE);
         }
 
     if (mult_sol)
-        printf("\nMÚLTIPLAS SOLUÇÕES POSSÍVEIS ! (Uma delas apresentada)\n");
+        printf("\nMULTIPLE POSSIBLE SOLUTIONS! (One of them presented)\n");
     else
-        printf("\nÓtimo encontrado !\n");
+        printf("\nGreat found !\n");
 
-    printf("\n\tSolução:\n\n");
+    printf("\n\tSolution:\n\n");
     fx = 0;
     for (size_t i = 0; i < number_base; i++)
         if (var_base[i].type == ORIGINAL)
         {
             fx += Xb[i][0] * var_base[i].cost;
-            printf("\tVariável %s -> %.4lf\n", var_base[i].name, Xb[i][0]);
+            printf("\tVariable %s -> %.4lf\n", var_base[i].name, Xb[i][0]);
         }
     for (size_t i = 0; i < number_Nbase; i++)
         if (var_Nbase[i].type == ORIGINAL)
-            printf("\tVariável %s -> %.4lf\n", var_Nbase[i].name, 0.0);
+            printf("\tVariable %s -> %.4lf\n", var_Nbase[i].name, 0.0);
 
-    printf("\n\tFunção objetivo: %.4lf\n\n", sinal * fx);
+    printf("\n\tObjective function value: %.4lf\n\n", sinal * fx);
 }
 
 void lista_custo_iguais(double valor, size_t var)
@@ -218,7 +218,7 @@ void lista_custo_iguais(double valor, size_t var)
     {
         if (!(custos = (custo_t *)malloc(sizeof(custo_t))))
         {
-            printf("[ERRO] Falha alocação de memoria para lista de custo, função lista_custo_iguais()\n\n");
+            printf("\n[ERROR] Memory allocation failed for cost list, function list_cost_iguais()\n\n");
             exit(EXIT_FAILURE);
         }
         len_custos = 1;
@@ -230,7 +230,7 @@ void lista_custo_iguais(double valor, size_t var)
         len_custos = 1;
         if (!(custos = (custo_t *)realloc(custos, sizeof(custo_t))))
         {
-            printf("[ERRO] Falha alocação de memoria para lista de custo, função lista_custo_iguais()\n\n");
+            printf("\n[ERROR] Memory allocation failed for cost list, function list_cost_iguais()\n\n");
             exit(EXIT_FAILURE);
         }
         custos[0].valor = valor;
@@ -240,7 +240,7 @@ void lista_custo_iguais(double valor, size_t var)
     {
         if (!(custos = (custo_t *)realloc(custos, sizeof(custo_t) * (++len_custos))))
         {
-            printf("[ERRO] Falha alocação de memoria para lista de custo, função lista_custo_iguais()\n\n");
+            printf("\n[ERROR] Memory allocation failed for cost list, function list_cost_iguais()\n\n");
             exit(EXIT_FAILURE);
         }
         custos[len_custos - 1].valor = valor;
