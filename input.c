@@ -106,10 +106,10 @@ void input_file(string path_file)
 
 string random_var(string prefixo, size_t index)
 {
-    string var = (string)malloc(sizeof(char) * (strlen(prefixo) + 6));
+    string var = (string)malloc(sizeof(char) * (strlen(prefixo) + 7));
     if (!var)
     {
-        printf("\n[ERRO] Memory allocation failure, random_var() function\n\n");
+        printf("\n[ERRO] Memory allocation failure, function random_var()\n\n");
         fclose(arq);
         exit(EXIT_FAILURE);
     }
@@ -119,7 +119,7 @@ string random_var(string prefixo, size_t index)
 
 void strlower(string str)
 {
-    for (size_t i = 0; i < (size_t)str[i]; i++)
+    for (size_t i = 0; i < strlen(str); i++)
         if ((str[i] >= 'A') && (str[i] <= 'Z'))
             str[i] += 'a' - 'A';
 }
@@ -483,7 +483,7 @@ double resto_mult(double escalar)
         double aux = uno();
         if (aux == 0)
         {
-            printf("\n[ERRO] Division by zero in constraints file\n\n");
+            printf("\n[ERRO] Division by zero in restrictions file\n\n");
             fclose(arq);
             exit(EXIT_FAILURE);
         }
@@ -735,7 +735,7 @@ void cria_var(double escalar, string name_var)
 
     if (!var.name || !var.aj)
     {
-        printf("\n[ERRO] Memory allocation failure, function create_var()\n\n");
+        printf("\n[ERRO] Memory allocation failure, function cria_var()\n\n");
         fclose(arq);
         exit(EXIT_FAILURE);
     }
@@ -748,7 +748,7 @@ void cria_var(double escalar, string name_var)
 
     if (!var_Nbase)
     {
-        printf("\n[ERRO] Memory allocation failure, function create_var() \n\n");
+        printf("\n[ERRO] Memory allocation failure, function cria_var() \n\n");
         fclose(arq);
         exit(EXIT_FAILURE);
     }
