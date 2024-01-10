@@ -26,7 +26,8 @@ typedef enum
     DNUM,
     DNUM_O,
     SMENORIGUAL,
-    SMAIORIGUAL
+    SMAIORIGUAL,
+    COMENTARIO
 } states_t;
 
 typedef enum
@@ -156,6 +157,10 @@ token_t get_token()
             {
                 token.value[length_char++] = '>';
                 state_atual = SMAIORIGUAL;
+            }
+            else if (char_atual == '#')
+            {
+                state_atual = COMENTARIO;
             }
             else if (char_atual == '=')
             {
@@ -306,6 +311,15 @@ token_t get_token()
                 token.value[length_char] = '\0';
                 token.type = ERROR;
                 ungetc(char_atual, arq);
+                break;
+            }
+        }
+        else if (state_atual == COMENTARIO)
+        {
+            if (char_atual == '\n')
+            {
+                ungetc(char_atual, arq);
+                token = get_token();
                 break;
             }
         }

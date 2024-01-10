@@ -5,10 +5,11 @@ This repository contains a C implementation of the Simplex Method for optimizing
 To use the program, simply provide a text file containing the objective function with the restrictions and pass it via parameter.
 The file must contain the following format:
 ~~~txt
-max 5x1 + 3x2
+max 5x1 + 3x2   # Objective function
 
 2x1 + x2 <= 10
 x1 + 3x2 <= 12
+#Use '#' for comments, everything after the symbol until the end of the line will be counted as a comment
 ~~~
 The declaration of the objective function can be used **max**, **maximize**, **min** or **minimize**.
 ### All variables are subject to '>= 0', so placing non-negativity constraints in the constraints file is redundancy.
