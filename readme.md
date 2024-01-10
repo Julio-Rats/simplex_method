@@ -1,4 +1,4 @@
-# Implementação do Método Simplex
+# Implementation of the Simplex Method
 
 This repository contains a C implementation of the Simplex Method for optimizing linear functions. The Simplex Method is an algorithm used to solve operational research (OP) problems in which it can be used to maximize or minimize an objective function subject to a set of linear restrictions on its variables.
 
