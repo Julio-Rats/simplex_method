@@ -145,7 +145,7 @@ void simplex()
         {
             if ((variavel_entra = var_menor_custo()) == -1)
             {
-                printf("\n\n\tUNLIMITED Solution\n\n");
+                printf("\n\n\tUNBOUNDED Solution\n\n");
                 exit(EXIT_SUCCESS);
             }
 
@@ -188,16 +188,16 @@ void simplex()
     for (size_t i = 0; i < number_base; i++)
         if (var_base[i].type == ARTIFICIAL && Xb[i][0])
         {
-            printf("\nArtificial variable (non-zero) at the end of optimization, INFACTABLE problem !!!\n\n");
+            printf("\nArtificial variable (non-zero) at the end of optimization, INFEASIBLE problem !!!\n\n");
             exit(EXIT_FAILURE);
         }
 
     if (mult_sol)
-        printf("\nMULTIPLE POSSIBLE SOLUTIONS! (One of them presented)\n");
+        printf("\n[WARNING] MULTIPLE POSSIBLE SOLUTIONS! (One of them presented)\n");
     else
-        printf("\nGreat found !\n");
+        printf("\nOptimal found !\n");
 
-    printf("\n\tSolution:\n\n");
+    printf("\n\tOptimal Solution:\n\n");
     fx = 0;
     for (size_t i = 0; i < number_base; i++)
         if (var_base[i].type == ORIGINAL)
