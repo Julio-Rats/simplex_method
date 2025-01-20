@@ -86,7 +86,7 @@ matrix_t decomposicao_LU(matrix_t A, matrix_t LU, size_t *vpermut, size_t n)
                 l_pivo = i;
             }
 
-        if (fabs(pivo) < 1e-6)
+        if (fabs(pivo) < EPSILON)
         {
             printf("[ERROR] Constraint matrix A is singular, system not possible!\n\n");
             exit(EXIT_FAILURE);

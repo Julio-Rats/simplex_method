@@ -98,7 +98,7 @@ void simplex()
         {
             free(custos);
             custos = NULL;
-            len_custos = 0;
+            len_custos = 0; 
         }
 
         solver_LU(matriz_Base_lu, vpermut, Xb, vetor_b, number_base);
@@ -186,7 +186,7 @@ void simplex()
     }
 
     for (size_t i = 0; i < number_base; i++)
-        if (var_base[i].type == ARTIFICIAL && Xb[i][0])
+        if (var_base[i].type == ARTIFICIAL && fabs(Xb[i][0]) >= EPSILON)
         {
             printf("\nArtificial variable (non-zero) at the end of optimization, INFEASIBLE problem !!!\n\n");
             exit(EXIT_FAILURE);
