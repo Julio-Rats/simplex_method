@@ -31,6 +31,4 @@ with the objective function and its restrictions.
 simplex.exe restrictions.txt
 ~~~
 
-The program will execute showing the executable steps in matrix notation, giving the solution at the end.
-if it exists, it is worth highlighting that the method still DOES NOT treat degenerate cases, not showing all
-solutions in case of multiple solutions.
+The program will run by displaying the executable steps in matrix notation, providing the solution at the end, if it exists. It is worth noting that the method still does NOT handle cases of cycling, and it will not display more than one solution in case of multiple solutions.
