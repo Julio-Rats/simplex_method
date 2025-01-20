@@ -86,7 +86,7 @@ void simplex()
                 printf("%.4lf\t", matriz_Base[i][j]);
         }
 
-        printf("\n\nLambda: (B^t)^-1 * Cb\n");
+        printf("\n\nVector Lambda = (B^t)^-1 * Cb:\n");
         for (size_t i = 0; i < number_base; i++)
             printf("%.4lf\n", lambda[i][0]);
 
@@ -103,7 +103,7 @@ void simplex()
 
         solver_LU(matriz_Base_lu, vpermut, Xb, vetor_b, number_base);
 
-        printf("\nVector x = B^-1 * b :\n");
+        printf("\nVector x = B^-1 * b:\n");
         for (size_t i = 0; i < number_base; i++)
             printf("%.4lf\n", Xb[i][0]);
 
@@ -165,18 +165,18 @@ void simplex()
                     ilimitada = false;
                 }
             }
-            printf("\nBnj vector, variable %s\n", var_Nbase[variavel_entra].name);
+            printf("\nVector y = B^-1 * A[j], j index of variable %s\n", var_Nbase[variavel_entra].name);
             for (size_t i = 0; i < number_base; i++)
                 printf("%.4lf\n", vetor_y[i][0]);
 
             if (ilimitada)
-                printf("\nDidn't find any positive Y\n");
+                printf("\nDidn't find any positive y\n");
 
         } while (ilimitada);
 
         printf("\nInteraction Summary:\n\n");
         printf("Lower cost %.4lf, variable %s\n", menor_custo, var_Nbase[variavel_entra].name);
-        printf("Smallest step %.4lf (min = {x[i]/Aj[i]} | For all Aj[i] > 0), variable %s\n", menor_passo, var_base[variavel_sai].name);
+        printf("Smallest step %.4lf (min = {x[i]/y[i]} | For all y[i] > 0), variable %s\n", menor_passo, var_base[variavel_sai].name);
         printf("In this iteration variable %s enters and variable %s leaves the base\n\n", var_Nbase[variavel_entra].name, var_base[variavel_sai].name);
 
         variavel_t aux = var_Nbase[variavel_entra];
