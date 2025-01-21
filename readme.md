@@ -35,14 +35,15 @@ The program will run displaying the executable steps in matrix notation, providi
 
 ## Parameters:
 
-~~~sh
+```txt
 Use:
     simplex [options] <file.txt>
 
 Options:
+
 -b: Enable Bland's pivot rule
 -d: Disable verbose mode
 -e <value>: Set manual value to Epsilon (Default: 1e-9)
 -i: Activate iterative mode (incompatible with disable verbose, -d)
 -m <value>: Set manual value to BIGM (Default: 1e9)
-~~~
+```
