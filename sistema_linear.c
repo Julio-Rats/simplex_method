@@ -4,6 +4,9 @@
 
 #include "sistema_linear.h"
 
+/*  Global local Variables  */
+long double EPSILON = 1e-9;
+
 matrix_t init_matriz(size_t m, size_t n)
 {
     matrix_t A = (matrix_t)malloc(sizeof(vector_t) * m);
@@ -86,9 +89,9 @@ matrix_t decomposicao_LU(matrix_t A, matrix_t LU, size_t *vpermut, size_t n)
                 l_pivo = i;
             }
 
-        if (fabs(pivo) < EPSILON)
+        if (fabsl((long double)pivo) < EPSILON)
         {
-            printf("[ERROR] Constraint matrix A is singular, system not possible!\n\n");
+            printf("[ERROR] Constraint matrix A is singular, system not possible! (Try smaller values for EPSILON, -e <value>)\n\n");
             exit(EXIT_FAILURE);
         }
 

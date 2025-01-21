@@ -31,4 +31,18 @@ with the objective function and its restrictions.
 simplex.exe restrictions.txt
 ~~~
 
-The program will run by displaying the executable steps in matrix notation, providing the solution at the end, if it exists. It is worth noting that the method still does NOT handle cases of cycling, and it will not display more than one solution in case of multiple solutions.
+The program will run displaying the executable steps in matrix notation, providing the solution at the end, if it exists. It is worth noting that the method does NOT handle cycling cases automatically; for that, use the -b parameter, thus activating the Bland's pivoting rule, and it will not display more than one solution in case of multiple solutions.
+
+## Parameters:
+
+~~~sh
+Use:
+    simplex [options] <file.txt>
+
+Options:
+-b: Enable Bland's pivot rule
+-d: Disable verbose mode
+-e <value>: Set manual value to Epsilon (Default: 1e-9)
+-i: Activate iterative mode (incompatible with disable verbose, -d)
+-m <value>: Set manual value to BIGM (Default: 1e9)
+~~~

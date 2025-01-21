@@ -6,8 +6,6 @@
 #define true 1
 #define false 0
 
-#define BIGM (1e6)
-
 typedef char bool;
 typedef char *string;
 typedef double *vector_t;
@@ -24,10 +22,12 @@ typedef struct
 {
     double cost;    // Cost in objective function (C)
     string name;    // Variable name, ex: "x1", "x2".
+    size_t index;   // Unique numeric ID for each variable
     vartype_e type; // Variable type (Original, Slack or Artificial).
     double **aj;    // Column with its restrictions.
 } variavel_t;
 
+// input.c
 extern size_t number_base;    // Dimension of the basic matrix (B).
 extern size_t number_Nbase;   // Non-basic matrix dimension (N).
 extern double **vetor_b;      // Vector b, from the system Ax=b.

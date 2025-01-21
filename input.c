@@ -6,16 +6,18 @@
 
 #define STR_LEN 128
 
-/*  Global Variables  */
+/*  Global Function  */
+matrix_t init_matriz(size_t m, size_t n); // sistema_linear.c
+
+/*  Global local Variables  */
 size_t number_base = 0;       // Basic matrix dimensions (B).
 size_t number_Nbase = 0;      // Non-Basic Array Dimensions (N).
 matrix_t vetor_b = NULL;      // Vector b, from the system Ax=b.
 variavel_t *var_base = NULL;  // Basic variables.
 variavel_t *var_Nbase = NULL; // Non-basic variables.
 char sinal;                   // External variable, simplex.c
-
-/*  Global Function  */
-matrix_t init_matriz(size_t m, size_t n); // sistema_linear.c
+size_t var_index = 0;         // Unique numeric ID for each variable
+long double BIGM = 1e9;       // Number associated with the cost of artificial variables, BIGM method
 
 /*  Local Enum  */
 typedef enum
@@ -95,7 +97,7 @@ void input_file(string path_file)
 {
     if ((arq = fopen(path_file, "rt")) == NULL)
     {
-        printf("\n[ERRO] Failed to open the file: %s\n\n", path_file);
+        printf("\n[ERROR]: Failed to open the file: '%s'\n\n", path_file);
         exit(EXIT_FAILURE);
     }
     tipo_otimizacao();
@@ -110,7 +112,7 @@ string random_var(string prefixo, size_t index)
     string var = (string)malloc(sizeof(char) * (strlen(prefixo) + 7));
     if (!var)
     {
-        printf("\n[ERRO] Memory allocation failure, function random_var()\n\n");
+        printf("\n[ERROR]: Memory allocation failure, function random_var()\n\n");
         fclose(arq);
         exit(EXIT_FAILURE);
     }
@@ -369,7 +371,7 @@ void tipo_otimizacao()
             sinal = -1;
         else
         {
-            printf("\n[ERRO] Wrong syntax, expected min or max, but was received '%s'\n\n", token.value);
+            printf("\n[ERROR]: Wrong syntax, expected min or max, but was received '%s'\n\n", token.value);
             fclose(arq);
             exit(EXIT_FAILURE);
         }
@@ -384,7 +386,7 @@ void tipo_otimizacao()
     }
     else if (token.type == EF)
     {
-        printf("\n[ERRO] Wrong syntax, expected objective function declaration, but received '%s'\n\n", token.value);
+        printf("\n[ERROR]: Wrong syntax, expected objective function declaration, but received '%s'\n\n", token.value);
         fclose(arq);
         exit(EXIT_FAILURE);
     }
@@ -402,7 +404,7 @@ void funcao_objetivo(int oper) // need
         cria_var(escalar * oper, token.value);
     else
     {
-        printf("\n[ERRO] Wrong syntax, expected mathematical operator or variable, but was received '%s'\n\n", token.value);
+        printf("\n[ERROR]: Wrong syntax, expected mathematical operator or variable, but was received '%s'\n\n", token.value);
         fclose(arq);
         exit(EXIT_FAILURE);
     }
@@ -433,7 +435,7 @@ void resto_Fx()
     }
     else if (token.type != NL)
     {
-        printf("\n[ERRO] Wrong syntax, expected end of objective function or new variable, but was received '%s'\n\n", token.value);
+        printf("\n[ERROR]: Wrong syntax, expected end of objective function or new variable, but was received '%s'\n\n", token.value);
         fclose(arq);
         exit(EXIT_FAILURE);
     }
@@ -497,7 +499,7 @@ double resto_mult(double escalar)
         double aux = uno();
         if (aux == 0)
         {
-            printf("\n[ERRO] Division by zero in restrictions file\n\n");
+            printf("\n[ERROR]: Division by zero in restrictions file\n\n");
             fclose(arq);
             exit(EXIT_FAILURE);
         }
@@ -519,14 +521,14 @@ double fator() // nedd
         double aux = expr();
         if (token.type != FECHAPAR)
         {
-            printf("\n[ERRO] Wrong syntax, expected to close parenthesis, but was received '%s'\n\n", token.value);
+            printf("\n[ERROR]: Wrong syntax, expected to close parenthesis, but was received '%s'\n\n", token.value);
             fclose(arq);
             exit(EXIT_FAILURE);
         }
         return aux;
     }
 
-    printf("\n[ERRO] Wrong syntax, expected an expression, but was received '%s'\n\n", token.value);
+    printf("\n[ERROR]: Wrong syntax, expected an expression, but was received '%s'\n\n", token.value);
     fclose(arq);
     exit(EXIT_FAILURE);
 }
@@ -584,7 +586,7 @@ void var_restr(int oper) // need
         add_restricao(escalar * oper, token.value);
     else
     {
-        printf("\n[ERRO] Wrong syntax, expected mathematical operator or variable, but was received '%s'\n\n", token.value);
+        printf("\n[ERROR]: Wrong syntax, expected mathematical operator or variable, but was received '%s'\n\n", token.value);
         fclose(arq);
         exit(EXIT_FAILURE);
     }
@@ -619,7 +621,7 @@ size_t tipo_des() // need
         return MAIORIGUAL;
     else
     {
-        printf("\n[ERRO] Wrong syntax, expected mathematical operator or variable, but was received '%s'\n\n", token.value);
+        printf("\n[ERROR]: Wrong syntax, expected mathematical operator or variable, but was received '%s'\n\n", token.value);
         fclose(arq);
         exit(EXIT_FAILURE);
     }
@@ -645,7 +647,7 @@ void add_vet_b(double escalar)
 
     if (!vetor_b)
     {
-        printf("\n[ERRO] Memory allocation failure, function add_vet_b()\n\n");
+        printf("\n[ERROR]: Memory allocation failure, function add_vet_b()\n\n");
         fclose(arq);
         exit(EXIT_FAILURE);
     }
@@ -658,7 +660,7 @@ void menor_igual_rest()
 {
     matrix_t vetor_aux = init_matriz(1, number_rest);
     vetor_aux[0][number_rest - 1] = 1.0;
-    variavel_t var_folga = {0.0, random_var("Slack_", number_folga++), FOLGA, vetor_aux};
+    variavel_t var_folga = {0.0, random_var("Slack_", number_folga++), var_index++, FOLGA, vetor_aux};
 
     if (++number_base == 1)
         var_base = (variavel_t *)malloc(sizeof(variavel_t));
@@ -667,7 +669,7 @@ void menor_igual_rest()
 
     if (!var_base)
     {
-        printf("\n[ERRO] Memory allocation failure, function menor_igual_rest()\n\n");
+        printf("\n[ERROR]: Memory allocation failure, function menor_igual_rest()\n\n");
         fclose(arq);
         exit(EXIT_FAILURE);
     }
@@ -678,7 +680,7 @@ void igual_rest()
 {
     matrix_t vetor_aux = init_matriz(1, number_rest);
     vetor_aux[0][number_rest - 1] = 1.0;
-    variavel_t var_folga = {fabs((double)BIGM), random_var("Artif_", number_artif++), ARTIFICIAL, vetor_aux};
+    variavel_t var_folga = {fabsl(BIGM), random_var("Artif_", number_artif++), var_index++, ARTIFICIAL, vetor_aux};
 
     if (++number_base == 1)
         var_base = (variavel_t *)malloc(sizeof(variavel_t));
@@ -687,7 +689,7 @@ void igual_rest()
 
     if (!var_base)
     {
-        printf("\n[ERRO] Memory allocation failure, function igual_rest()\n\n");
+        printf("\n[ERROR]: Memory allocation failure, function igual_rest()\n\n");
         fclose(arq);
         exit(EXIT_FAILURE);
     }
@@ -698,7 +700,7 @@ void maior_igual_rest()
 {
     matrix_t vetor_aux = init_matriz(1, number_rest);
     vetor_aux[0][number_rest - 1] = 1.0;
-    variavel_t var_folga = {fabs((double)BIGM), random_var("Artif_", number_artif++), ARTIFICIAL, vetor_aux};
+    variavel_t var_folga = {fabsl(BIGM), random_var("Artif_", number_artif++), var_index++, ARTIFICIAL, vetor_aux};
 
     if (++number_base == 1)
         var_base = (variavel_t *)malloc(sizeof(variavel_t));
@@ -707,7 +709,7 @@ void maior_igual_rest()
 
     if (!var_base)
     {
-        printf("\n[ERRO] Memory allocation failure, function maior_igual_rest()\n\n");
+        printf("\n[ERROR]: Memory allocation failure, function maior_igual_rest()\n\n");
         fclose(arq);
         exit(EXIT_FAILURE);
     }
@@ -715,7 +717,7 @@ void maior_igual_rest()
 
     vetor_aux = init_matriz(1, number_rest);
     vetor_aux[0][number_rest - 1] = -1.0;
-    variavel_t var_folgaN = {0.0, random_var("NegSlack_", number_folgaN++), FOLGA, vetor_aux};
+    variavel_t var_folgaN = {0.0, random_var("NegSlack_", number_folgaN++), var_index++, FOLGA, vetor_aux};
 
     if (++number_Nbase == 1)
         var_Nbase = (variavel_t *)malloc(sizeof(variavel_t));
@@ -724,7 +726,7 @@ void maior_igual_rest()
 
     if (!var_Nbase)
     {
-        printf("\n[ERRO] Memory allocation failure, function maior_igual_rest()\n\n");
+        printf("\n[ERROR]: Memory allocation failure, function maior_igual_rest()\n\n");
         fclose(arq);
         exit(EXIT_FAILURE);
     }
@@ -736,7 +738,7 @@ void cria_var(double escalar, string name_var)
     for (size_t i = 0; i < number_Nbase; i++)
         if (strcmp(name_var, var_Nbase[i].name) == 0)
         {
-            printf("\n[ERRO] Variable used more than once in the objective function, variable '%s\n\n", name_var);
+            printf("\n[ERROR]: Variable used more than once in the objective function, variable '%s'\n\n", name_var);
             fclose(arq);
             exit(EXIT_FAILURE);
         }
@@ -744,12 +746,13 @@ void cria_var(double escalar, string name_var)
     variavel_t var;
     var.cost = (double)(sinal * escalar);
     var.name = (string)malloc(sizeof(char) * (strlen(token.value) + 1));
+    var.index = var_index++;
     var.type = ORIGINAL;
     var.aj = (matrix_t)malloc(sizeof(vector_t));
 
     if (!var.name || !var.aj)
     {
-        printf("\n[ERRO] Memory allocation failure, function cria_var()\n\n");
+        printf("\n[ERROR]: Memory allocation failure, function cria_var()\n\n");
         fclose(arq);
         exit(EXIT_FAILURE);
     }
@@ -762,7 +765,7 @@ void cria_var(double escalar, string name_var)
 
     if (!var_Nbase)
     {
-        printf("\n[ERRO] Memory allocation failure, function cria_var() \n\n");
+        printf("\n[ERROR]: Memory allocation failure, function cria_var()\n\n");
         fclose(arq);
         exit(EXIT_FAILURE);
     }
@@ -782,7 +785,7 @@ void add_restricao(double escalar, string name_var)
         }
     if (!existe)
     {
-        printf("\n[ERRO] Unknown variable used in restrictions, variable '%s'\n\n", name_var);
+        printf("\n[ERROR]: Unknown variable used in restrictions, variable '%s'\n\n", name_var);
         fclose(arq);
         exit(EXIT_FAILURE);
     }
@@ -800,7 +803,7 @@ void add_coluna_aj(variavel_t *list, size_t len_list, size_t number_col)
 
         if (!list[i].aj[0])
         {
-            printf("\n[ERRO] Memory allocation failure, function add_coluna_aj()\n\n");
+            printf("\n[ERROR]: Memory allocation failure, function add_coluna_aj()\n\n");
             fclose(arq);
             exit(EXIT_FAILURE);
         }

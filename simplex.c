@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <float.h>
 #include <math.h>
 
 #include "sistema_linear.h" // includes together "structs.h"
 
 /*  Global Variable  */
-extern char sinal; // input.c
+extern char sinal;          // input.c
+extern long double EPSILON; // sistema_linear.c
 
 /*  Local Struct  */
 typedef struct
@@ -19,10 +21,19 @@ typedef struct
 custo_t *custos = NULL;
 size_t len_custos = 0;
 size_t sort = 0;
+size_t *last_var = NULL;
+size_t len_last_var = 0;
+bool bland = false;
+bool verbose = true;
+bool iterative = false;
+unsigned long steps = -1; // Max long
 
 /*  Local Functions  */
 void lista_custo_iguais(double valor, size_t var);
-long int var_menor_custo();
+long var_menor_custo();
+void add_index_var(size_t index);
+bool found_index_var(size_t index);
+long var_menor_custo();
 
 void simplex()
 {
@@ -44,23 +55,26 @@ void simplex()
 
     bool mult_sol = false;
 
-    size_t iter = 1;
+    size_t iter = 0;
     double fx = 0.f; // objective function value
 
     while (true)
     {
-        printf("\t\t%zuª ITERATION\n\n", iter++);
+        if (verbose)
+        {
+            printf("\t\t%zuª ITERATION\n\n", ++iter);
 
-        printf("Basic Variables \t B[");
-        for (size_t i = 0; i < number_base - 1; i++)
-            printf("%s, ", var_base[i].name);
+            printf("Basic Variables \t B[");
+            for (size_t i = 0; i < number_base - 1; i++)
+                printf("%s, ", var_base[i].name);
 
-        printf("%s]\n", var_base[number_base - 1].name);
-        printf("Non-Basic Variables \t N[");
-        for (size_t i = 0; i < number_Nbase - 1; i++)
-            printf("%s, ", var_Nbase[i].name);
+            printf("%s]\n", var_base[number_base - 1].name);
+            printf("Non-Basic Variables \t N[");
+            for (size_t i = 0; i < number_Nbase - 1; i++)
+                printf("%s, ", var_Nbase[i].name);
 
-        printf("%s]\n\n", var_Nbase[number_Nbase - 1].name);
+            printf("%s]\n\n", var_Nbase[number_Nbase - 1].name);
+        }
 
         for (size_t i = 0; i < number_base; i++)
         {
@@ -74,65 +88,79 @@ void simplex()
 
         solver_LU(matriz_Base_tr_lu, vpermut_tr, lambda, coef, number_base);
 
-        printf("Basic Coefficients (Cb):\n");
-        for (size_t i = 0; i < number_base; i++)
-            printf("%.4lf\n", coef[i][0]);
-
-        printf("\nMatrix B = [A[j]] | For all basic j:");
-        for (size_t i = 0; i < number_base; i++)
+        if (verbose)
         {
-            printf("\n");
-            for (size_t j = 0; j < number_base; j++)
-                printf("%.4lf\t", matriz_Base[i][j]);
+            printf("Basic Coefficients (Cb):\n");
+            for (size_t i = 0; i < number_base; i++)
+                printf("%.4lf\n", coef[i][0]);
+
+            printf("\nMatrix B = [A[j]] | For all basic j:");
+            for (size_t i = 0; i < number_base; i++)
+            {
+                printf("\n");
+                for (size_t j = 0; j < number_base; j++)
+                    printf("%.4lf\t", matriz_Base[i][j]);
+            }
+
+            printf("\n\nVector Lambda = (B^t)^-1 * Cb:\n");
+            for (size_t i = 0; i < number_base; i++)
+                printf("%.4lf\n", lambda[i][0]);
         }
 
-        printf("\n\nVector Lambda = (B^t)^-1 * Cb:\n");
-        for (size_t i = 0; i < number_base; i++)
-            printf("%.4lf\n", lambda[i][0]);
-
-        double custo, menor_custo = INT_MAX;
-        long int variavel_entra = -1;
-        size_t variavel_sai;
+        double custo, menor_custo = DBL_MAX;
+        long variavel_entra = -1;
+        size_t variavel_sai = 0;
 
         if (custos)
         {
             free(custos);
             custos = NULL;
-            len_custos = 0; 
+            len_custos = 0;
+        }
+
+        if (last_var)
+        {
+            free(last_var);
+            last_var = NULL;
+            len_last_var = 0;
         }
 
         solver_LU(matriz_Base_lu, vpermut, Xb, vetor_b, number_base);
 
-        printf("\nVector x = B^-1 * b:\n");
-        for (size_t i = 0; i < number_base; i++)
-            printf("%.4lf\n", Xb[i][0]);
+        if (verbose)
+        {
+            printf("\nVector x = B^-1 * b:\n");
+            for (size_t i = 0; i < number_base; i++)
+                printf("%.4lf\n", Xb[i][0]);
+        }
 
         fx = 0;
         for (size_t i = 0; i < number_base; i++)
             fx += Xb[i][0] * var_base[i].cost;
 
-        printf("\nObjective function value: %.4lf\n", sinal * fx);
+        if (verbose)
+            printf("\nObjective function value: %.4lf\n", sinal * fx);
 
         sort = 0;
         bool otimo = true;
 
-        printf("\nCosts (Cn[j] - A[j]^t * lambda | j non-basic)\n");
+        if (verbose)
+            printf("\nCosts (Cn[j] - A[j]^t * lambda | j non-basic):\n");
         for (size_t i = 0; i < number_Nbase; i++)
         {
             multi_matriz(var_Nbase[i].aj, lambda, custo_basico_A, 1, number_base, 1);
             custo = var_Nbase[i].cost - custo_basico_A[0][0];
-            printf("Var Cost: %s -> %.4lf\n", var_Nbase[i].name, custo);
+            if (verbose)
+                printf("Var Cost: %s -> %.4lf\n", var_Nbase[i].name, custo);
             if (custo < 0)
             {
-                if (custo <= menor_custo)
-                {
-                    menor_custo = custo;
-                    lista_custo_iguais(custo, i);
-                }
                 if (otimo)
                     otimo = false;
+
+                menor_custo = custo;
+                lista_custo_iguais(custo, i);
             }
-            else if (!mult_sol && fabs(custo) <= 1e-6)
+            else if (!mult_sol && fabsl((long double)custo) <= EPSILON)
                 mult_sol = true;
         }
 
@@ -145,55 +173,69 @@ void simplex()
         {
             if ((variavel_entra = var_menor_custo()) == -1)
             {
-                printf("\n\n\tUNBOUNDED Solution\n\n");
+                printf("\n\n\tUNBOUNDED Solution.\n\n");
                 exit(EXIT_SUCCESS);
             }
 
-            transposta(var_Nbase[variavel_entra].aj, var_Nbase_tr, 1, number_base);
+            transposta(var_Nbase[(unsigned long)variavel_entra].aj, var_Nbase_tr, 1, number_base);
             solver_LU(matriz_Base_lu, vpermut, vetor_y, var_Nbase_tr, number_base);
 
             for (size_t i = 0; i < number_base; i++)
             {
-                if (vetor_y[i][0] <= 1e-6)
+                if (vetor_y[i][0] <= EPSILON)
                     continue;
 
                 passo = (Xb[i][0]) / (vetor_y[i][0]);
-                if (passo < menor_passo || ilimitada) // first check
+                if (passo <= menor_passo || ilimitada) // first check
                 {
+                    if (bland && passo == menor_passo && !ilimitada)
+                        if (var_base[variavel_sai].index > var_base[i].index)
+                            continue;
                     menor_passo = passo;
                     variavel_sai = i;
                     ilimitada = false;
                 }
             }
-            printf("\nVector y = B^-1 * A[j], j index of variable %s\n", var_Nbase[variavel_entra].name);
-            for (size_t i = 0; i < number_base; i++)
-                printf("%.4lf\n", vetor_y[i][0]);
+            if (verbose)
+            {
+                printf("\nVector d = B^-1 * A[j], j index of variable '%s'%s\n", var_Nbase[(unsigned long)variavel_entra].name,
+                       bland ? " (Enable Bland's pivot rule):" : ":");
+                for (size_t i = 0; i < number_base; i++)
+                    printf("%.4lf\n", vetor_y[i][0]);
+            }
 
             if (ilimitada)
-                printf("\nDidn't find any positive y\n");
+                printf("\nDidn't find any positive y for var '%s'\n", var_Nbase[(unsigned long)variavel_entra].name);
 
         } while (ilimitada);
 
-        printf("\nInteraction Summary:\n\n");
-        printf("Lower cost %.4lf, variable %s\n", menor_custo, var_Nbase[variavel_entra].name);
-        printf("Smallest step %.4lf (min = {x[i]/y[i]} | For all y[i] > 0), variable %s\n", menor_passo, var_base[variavel_sai].name);
-        printf("In this iteration variable %s enters and variable %s leaves the base\n\n", var_Nbase[variavel_entra].name, var_base[variavel_sai].name);
+        if (verbose)
+        {
+            printf("\nInteraction Summary:\n\n");
+            printf("Lower cost %.4lf, variable '%s'%s\n", menor_custo, var_Nbase[variavel_entra].name,
+                   bland ? " (Enable Bland's pivot rule)" : "");
+            printf("Smallest step %.4lf (min = {x[i]/d[i]} | For all d[i] > 0), variable '%s'%s\n", menor_passo, var_base[variavel_sai].name,
+                   bland ? " (Enable Bland's pivot rule)" : "");
+            printf("In this iteration variable '%s' enters and variable '%s' leaves the base\n\n", var_Nbase[variavel_entra].name, var_base[variavel_sai].name);
+        }
 
         variavel_t aux = var_Nbase[variavel_entra];
         var_Nbase[variavel_entra] = var_base[variavel_sai];
         var_base[variavel_sai] = aux;
-        // char a = getc(stdin);
+
+        if (iterative)
+            getc(stdin);
     }
 
     for (size_t i = 0; i < number_base; i++)
-        if (var_base[i].type == ARTIFICIAL && fabs(Xb[i][0]) >= EPSILON)
+        if (var_base[i].type == ARTIFICIAL && fabsl((long double)Xb[i][0]) >= EPSILON)
         {
-            printf("\nArtificial variable (non-zero) at the end of optimization, INFEASIBLE problem !!!\n\n");
+            printf("\nArtificial variable (non-zero) at the end of optimization, INFEASIBLE problem! (Try larger values for BIGM, -m <value>)\n\n");
             exit(EXIT_FAILURE);
         }
 
     if (mult_sol)
-        printf("\n[WARNING] MULTIPLE POSSIBLE SOLUTIONS! (One of them presented)\n");
+        printf("\n[WARNING]: MULTIPLE POSSIBLE SOLUTIONS! (One of them presented)\n");
     else
         printf("\nOptimal found !\n");
 
@@ -218,7 +260,7 @@ void lista_custo_iguais(double valor, size_t var)
     {
         if (!(custos = (custo_t *)malloc(sizeof(custo_t))))
         {
-            printf("\n[ERROR] Memory allocation failed for cost list, function list_cost_iguais()\n\n");
+            printf("\n[ERROR]: Memory allocation failed for cost list, function list_cost_iguais()\n\n");
             exit(EXIT_FAILURE);
         }
         len_custos = 1;
@@ -230,7 +272,7 @@ void lista_custo_iguais(double valor, size_t var)
         len_custos = 1;
         if (!(custos = (custo_t *)realloc(custos, sizeof(custo_t))))
         {
-            printf("\n[ERROR] Memory allocation failed for cost list, function list_cost_iguais()\n\n");
+            printf("\n[ERROR]: Memory allocation failed for cost list, function list_cost_iguais()\n\n");
             exit(EXIT_FAILURE);
         }
         custos[0].valor = valor;
@@ -240,7 +282,7 @@ void lista_custo_iguais(double valor, size_t var)
     {
         if (!(custos = (custo_t *)realloc(custos, sizeof(custo_t) * (++len_custos))))
         {
-            printf("\n[ERROR] Memory allocation failed for cost list, function list_cost_iguais()\n\n");
+            printf("\n[ERROR]: Memory allocation failed for cost list, function list_cost_iguais()\n\n");
             exit(EXIT_FAILURE);
         }
         custos[len_custos - 1].valor = valor;
@@ -248,10 +290,60 @@ void lista_custo_iguais(double valor, size_t var)
     }
 }
 
-long int var_menor_custo()
+void add_index_var(size_t index)
 {
-    if (sort < len_custos)
-        return custos[sort++].variavel;
+    if (len_last_var == 0)
+    {
+        if (!(last_var = (size_t *)malloc(sizeof(size_t))))
+        {
+            printf("\n[ERROR]: Memory allocation failed for cost list, function add_index_var()\n\n");
+            exit(EXIT_FAILURE);
+        }
+        last_var[0] = index;
+        len_last_var = 1;
+    }
     else
+    {
+        if (!(last_var = (size_t *)realloc(last_var, sizeof(size_t) * (++len_last_var))))
+        {
+            printf("\n[ERROR]: Memory allocation failed for cost list, function list_cost_iguais()\n\n");
+            exit(EXIT_FAILURE);
+        }
+        last_var[len_last_var - 1] = index;
+    }
+}
+
+bool found_index_var(size_t index)
+{
+    for (size_t i = 0; i < len_last_var; i++)
+        if (last_var[i] == index)
+            return true;
+
+    return false;
+}
+
+long var_menor_custo()
+{
+    if (sort >= len_custos)
         return -1;
+
+    if (bland)
+    {
+        size_t small_index = -1; // max size_t
+        long index = -1;
+
+        for (size_t i = 0; i < len_custos; i++)
+        {
+            size_t var_index = var_Nbase[custos[i].variavel].index;
+            if (var_index < small_index && !found_index_var(var_index))
+            {
+                small_index = var_index;
+                index = custos[i].variavel;
+            }
+        }
+        add_index_var(small_index);
+        return index;
+    }
+    else
+        return (long)custos[sort++].variavel;
 }
