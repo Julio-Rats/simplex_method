@@ -6,9 +6,15 @@
 
 #include "sistema_linear.h" // includes together "structs.h"
 
-/*  Global Variable  */
+/*  Global Variables  */
 extern char sinal;          // input.c
 extern long double EPSILON; // sistema_linear.c
+
+/*  Global Local Variables  */
+bool bland = false;
+bool verbose = true;
+bool iterative = false;
+// unsigned long steps = -1; // Max long
 
 /*  Local Struct  */
 typedef struct
@@ -23,10 +29,7 @@ size_t len_custos = 0;
 size_t sort = 0;
 size_t *last_var = NULL;
 size_t len_last_var = 0;
-bool bland = false;
-bool verbose = true;
-bool iterative = false;
-unsigned long steps = -1; // Max long
+
 
 /*  Local Functions  */
 void lista_custo_iguais(double valor, size_t var);

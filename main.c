@@ -4,7 +4,7 @@
 
 #include "structs.h"
 
-#ifdef _WIN32
+#if defined(__CYGWIN__) || defined(_WIN32)
 #include <windows.h>
 #elif __linux__
 #include <locale.h>
@@ -42,10 +42,10 @@ void get_args(int argc, char *argv[])
                 if (i < argc - 2)
                 {
                     EPSILON = atof(argv[i + 1]);
-                    printf("\n[Warning]: Make sure the value of EPSILON is small enough for the problem\n\n");
+                    printf("\n[WARNING]: Make sure the value of EPSILON is small enough for the problem\n\n");
                 }
                 else
-                    printf("\n[Warning]: Missing value in -e parameter\n\n");
+                    printf("\n[WARNING]: Missing value in -e parameter\n\n");
                 break;
             case 'i':
                 iterative = verbose;
@@ -54,16 +54,16 @@ void get_args(int argc, char *argv[])
                 if (i < argc - 2)
                 {
                     BIGM = atof(argv[i + 1]);
-                    printf("\n[Warning]: Make sure the value of BIGM is large enough for the problem\n\n");
+                    printf("\n[WARNING]: Make sure the value of BIGM is large enough for the problem\n\n");
                 }
                 else
-                    printf("\n[Warning]: Missing value in -m parameter\n\n");
+                    printf("\n[WARNING]: Missing value in -m parameter\n\n");
                 break;
                 // case 's':
                 //     if (i < argc - 2)
                 //         steps = atol(argv[i + 1]);
                 //     else
-                //         printf("\n[Warning]: Missing value in -s parameter\n\n");
+                //         printf("\n[WARNING]: Missing value in -s parameter\n\n");
                 //     break;
             }
 }
@@ -72,7 +72,7 @@ void get_args(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
 
-#ifdef _WIN32
+#if defined(__CYGWIN__) || defined(_WIN32)
     SetConsoleOutputCP(CP_UTF8);
 #elif __linux__
     setlocale(LC_NUMERIC, "en_US.UTF-8");
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
         simplex();
     }
 
-#ifdef _WIN32
+#if defined(__CYGWIN__) || defined(_WIN32)
     SetConsoleOutputCP(GetConsoleOutputCP());
 #endif
 
