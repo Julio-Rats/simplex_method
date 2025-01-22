@@ -30,7 +30,7 @@ typedef struct
 // input.c
 extern size_t number_base;    // Dimension of the basic matrix (B).
 extern size_t number_Nbase;   // Non-basic matrix dimension (N).
-extern double **vetor_b;      // Vector b, from the system Ax=b.
+extern double **vector_b;     // Vector b, from the system Ax=b.
 extern variavel_t *var_base;  // Basic variables.
 extern variavel_t *var_Nbase; // Non-basic variables.
 

@@ -43,11 +43,11 @@ matrix_t solver_LU(matrix_t LU, size_t *vpermut, matrix_t x, matrix_t b, size_t 
 
     for (size_t i = 0; i < n; i++)
     {
-        double soma = 0;
+        double sum = 0;
         for (int j = 0; j <= (int)i - 1; j++)
-            soma += LU[i][j] * y[j];
+            sum += LU[i][j] * y[j];
 
-        y[i] = b_permut[i] - soma;
+        y[i] = b_permut[i] - sum;
     }
 
     for (size_t i = 0; i < n; i++)
@@ -55,17 +55,17 @@ matrix_t solver_LU(matrix_t LU, size_t *vpermut, matrix_t x, matrix_t b, size_t 
 
     for (int i = (n - 1); i >= 0; i--)
     {
-        double soma = 0;
+        double sum = 0;
         for (size_t j = (i + 1); j < n; j++)
-            soma += LU[i][j] * x[j][0];
+            sum += LU[i][j] * x[j][0];
 
-        x[i][0] = (y[i] - soma) / LU[i][i];
+        x[i][0] = (y[i] - sum) / LU[i][i];
     }
 
     return x;
 }
 
-matrix_t decomposicao_LU(matrix_t A, matrix_t LU, size_t *vpermut, size_t n)
+matrix_t LU_decomposition(matrix_t A, matrix_t LU, size_t *vpermut, size_t n)
 {
     /*
        Decompose A into LU.
@@ -121,7 +121,7 @@ matrix_t decomposicao_LU(matrix_t A, matrix_t LU, size_t *vpermut, size_t n)
     return LU;
 }
 
-matrix_t multi_matriz(matrix_t A, matrix_t B, matrix_t dest, size_t m, size_t n, size_t r)
+matrix_t matrix_multi(matrix_t A, matrix_t B, matrix_t dest, size_t m, size_t n, size_t r)
 {
     for (size_t i = 0; i < m; i++)
         for (size_t k = 0; k < r; k++)
@@ -134,7 +134,7 @@ matrix_t multi_matriz(matrix_t A, matrix_t B, matrix_t dest, size_t m, size_t n,
     return dest;
 }
 
-matrix_t multi_escalar(matrix_t src, double escalar, matrix_t dest, size_t m, size_t n)
+matrix_t scala_multi(matrix_t src, double escalar, matrix_t dest, size_t m, size_t n)
 {
     for (size_t i = 0; i < m; i++)
         for (size_t j = 0; j < n; j++)
@@ -143,7 +143,7 @@ matrix_t multi_escalar(matrix_t src, double escalar, matrix_t dest, size_t m, si
     return dest;
 }
 
-matrix_t transposta(matrix_t src, matrix_t dest, size_t m, size_t n)
+matrix_t transpose(matrix_t src, matrix_t dest, size_t m, size_t n)
 {
     for (size_t i = 0; i < m; i++)
         for (size_t j = 0; j < n; j++)

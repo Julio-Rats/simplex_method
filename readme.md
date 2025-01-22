@@ -1,40 +1,38 @@
 # Implementation of the Simplex Method
 
-This repository contains a C implementation of the Simplex Method for optimizing linear functions. The Simplex Method is an algorithm used to solve operational research (OP) problems in which it can be used to maximize or minimize an objective function subject to a set of linear restrictions on its variables.
+This repository provides a ``C`` implementation of the ``Simplex Method``, a widely-used algorithm for solving linear programming problems. The Simplex Method optimizes an objective function, either ``maximizing`` or ``minimizing`` it, while adhering to a set of linear constraints on the decision variables.
 
-To use the program, simply provide a text file containing the objective function with the restrictions and pass it via parameter.
-The file must contain the following format:
-~~~txt
+To use the program, provide a text file containing the objective function along with the constraints, and pass it as a parameter to the program.
+The file must follow this format:
+~~~sh
 max 5x1 + 3x2   # Objective function
 
 2x1 + x2 <= 10
 x1 + 3x2 <= 12
-# Use '#' for comments, everything after the symbol until the end of the line will be counted as a comment
+# Use '#' for comments. Anything following this symbol,
+#  up to the end of the line, will be treated as a comment.
 ~~~
-The declaration of the objective function can be used **max**, **maximize**, **min** or **minimize**.
-### All variables are subject to '>= 0', so placing non-negativity constraints in the constraints file is redundancy.
+The objective function can be declared using **max**, **maximize**, **min**, or **minimize**. Note that it is not case-sensitive.
+#### All variables are subject to `>= 0`, so adding non-negativity constraints in the constraints file is redundant.
 
 
 ## Compile and run the program:
 
-Compilation can be done through the **Makefile** using the **make** program, or manually by accessing
-the folder with terminal and using the compiler.
-Example of a manual compilation:
+The program can be compiled using the **Makefile** with the `make` command, or manually by navigating to the folder via the terminal and using the compiler.
+Example of manual compilation:
 ~~~sh
 gcc -c *.o
 gcc *.o -o simplex.exe
 ~~~
 
-These commands will generate the simplex.exe executable, in which the file must be passed as a parameter
-with the objective function and its restrictions.
+These commands will generate the ``simplex.exe`` executable, which requires the file containing the objective function and its constraints to be passed as a parameter.
 ~~~sh
 simplex.exe restrictions.txt
 ~~~
 
-The program will run displaying the executable steps in matrix notation, providing the solution at the end, if it exists. It is worth noting that the method does NOT handle cycling cases automatically; for that, use the -b parameter, thus activating the Bland's pivoting rule, and it will not display more than one solution in case of multiple solutions.
+The program will run, displaying the execution steps in matrix notation and providing the solution at the end, if one exists. Note that the method does NOT handle cycling cases automatically. To address this, use the ``-b`` parameter to activate Bland's pivoting rule, which ensures that only one solution is displayed in the case of multiple solutions
 
 ## Parameters:
-
 ```txt
 Use:
     simplex [options] <file.txt>

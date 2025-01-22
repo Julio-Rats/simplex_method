@@ -12,24 +12,24 @@ matrix_t init_matriz(size_t m, size_t n); // sistema_linear.c
 /*  Global local Variables  */
 size_t number_base = 0;       // Basic matrix dimensions (B).
 size_t number_Nbase = 0;      // Non-Basic Array Dimensions (N).
-matrix_t vetor_b = NULL;      // Vector b, from the system Ax=b.
+matrix_t vector_b = NULL;     // Vector b, from the system Ax=b.
 variavel_t *var_base = NULL;  // Basic variables.
 variavel_t *var_Nbase = NULL; // Non-basic variables.
-char sinal;                   // External variable, simplex.c
+char signal;                  // External variable, simplex.c
 size_t var_index = 0;         // Unique numeric ID for each variable
 long double BIGM = 1e9;       // Number associated with the cost of artificial variables, BIGM method
 
 /*  Local Enum  */
 typedef enum
 {
-    INICIO = 0,
+    START = 0,
     SVAR,
     SNUM,
     DNUM,
     DNUM_O,
-    SMENORIGUAL,
-    SMAIORIGUAL,
-    COMENTARIO
+    SLEQUAL,
+    SGEQUAL,
+    COMMENT
 } states_t;
 
 typedef enum
@@ -38,15 +38,15 @@ typedef enum
     VAR,
     MULT,
     DIV,
-    SOMA,
+    SUM,
     SUB,
     NL,
     EF,
-    MENORIGUAL,
-    MAIORIGUAL,
-    IGUAL,
-    ABREPAR,
-    FECHAPAR,
+    LEQUAL,
+    GEQUAL,
+    EQUAL,
+    OPAREN,
+    CPAREN,
     ERROR
 } type_token;
 
@@ -129,7 +129,7 @@ void strlower(string str)
 
 token_t get_token()
 {
-    states_t state_atual = INICIO;
+    states_t state_atual = START;
     token_t token;
     char char_atual;
     size_t length_char = 0;
@@ -138,7 +138,7 @@ token_t get_token()
     {
         char_atual = fgetc(arq);
 
-        if (state_atual == INICIO)
+        if (state_atual == START)
         {
             if (((char_atual >= 'a') && (char_atual <= 'z')) || ((char_atual >= 'A') && (char_atual <= 'Z')))
             {
@@ -153,27 +153,27 @@ token_t get_token()
             else if (char_atual == '<')
             {
                 token.value[length_char++] = '<';
-                state_atual = SMENORIGUAL;
+                state_atual = SLEQUAL;
             }
             else if (char_atual == '>')
             {
                 token.value[length_char++] = '>';
-                state_atual = SMAIORIGUAL;
+                state_atual = SGEQUAL;
             }
             else if (char_atual == '#')
             {
-                state_atual = COMENTARIO;
+                state_atual = COMMENT;
             }
             else if (char_atual == '=')
             {
                 strcpy(token.value, "=");
-                token.type = IGUAL;
+                token.type = EQUAL;
                 break;
             }
             else if (char_atual == '+')
             {
                 strcpy(token.value, "+");
-                token.type = SOMA;
+                token.type = SUM;
                 break;
             }
             else if (char_atual == '-')
@@ -197,13 +197,13 @@ token_t get_token()
             else if (char_atual == '(')
             {
                 strcpy(token.value, "(");
-                token.type = ABREPAR;
+                token.type = OPAREN;
                 break;
             }
             else if (char_atual == ')')
             {
                 strcpy(token.value, ")");
-                token.type = FECHAPAR;
+                token.type = CPAREN;
                 break;
             }
             else if (char_atual == '\n')
@@ -282,13 +282,13 @@ token_t get_token()
                 break;
             }
         }
-        else if (state_atual == SMENORIGUAL)
+        else if (state_atual == SLEQUAL)
         {
             if (char_atual == '=')
             {
                 token.value[length_char++] = '=';
                 token.value[length_char] = '\0';
-                token.type = MENORIGUAL;
+                token.type = LEQUAL;
                 break;
             }
             else
@@ -299,13 +299,13 @@ token_t get_token()
                 break;
             }
         }
-        else if (state_atual == SMAIORIGUAL)
+        else if (state_atual == SGEQUAL)
         {
             if (char_atual == '=')
             {
                 token.value[length_char++] = '=';
                 token.value[length_char] = '\0';
-                token.type = MAIORIGUAL;
+                token.type = GEQUAL;
                 break;
             }
             else
@@ -316,7 +316,7 @@ token_t get_token()
                 break;
             }
         }
-        else if (state_atual == COMENTARIO)
+        else if (state_atual == COMMENT)
         {
             if (char_atual == '\n')
             {
@@ -366,9 +366,9 @@ void tipo_otimizacao()
     {
         strlower(token.value);
         if ((strcmp(token.value, "min") == 0) || (strcmp(token.value, "minimize") == 0))
-            sinal = 1;
+            signal = 1;
         else if ((strcmp(token.value, "max") == 0) || (strcmp(token.value, "maximize") == 0))
-            sinal = -1;
+            signal = -1;
         else
         {
             printf("\n[ERROR]: Wrong syntax, expected min or max, but was received '%s'\n\n", token.value);
@@ -423,7 +423,7 @@ void resto_Fx()
 {
     /*  + <funcao_objetivo> | - <funcao_objetivo> | NL  */
     token = get_token();
-    if (token.type == SOMA)
+    if (token.type == SUM)
     {
         token = get_token();
         funcao_objetivo(1);
@@ -444,7 +444,7 @@ void resto_Fx()
 double resto_add(double escalar)
 {
     /*  [ + <mult> <resto_add> ] | [ - <mult> <resto_add> ] | &  */
-    if (token.type == SOMA)
+    if (token.type == SUM)
     {
         token = get_token();
         escalar = resto_add(escalar + mult());
@@ -468,7 +468,7 @@ double uno() // need
 {
     /*  +<uno> | -<uno> | fator */
     double escalar;
-    if (token.type == SOMA)
+    if (token.type == SUM)
     {
         token = get_token();
         escalar = uno();
@@ -515,11 +515,11 @@ double fator() // nedd
         return atof(token.value);
     else if (token.type == VAR)
         return (double)1.0;
-    else if (token.type == ABREPAR)
+    else if (token.type == OPAREN)
     {
         token = get_token();
         double aux = expr();
-        if (token.type != FECHAPAR)
+        if (token.type != CPAREN)
         {
             printf("\n[ERROR]: Wrong syntax, expected to close parenthesis, but was received '%s'\n\n", token.value);
             fclose(arq);
@@ -546,7 +546,7 @@ void restricao()
         token = get_token();
         var_restr(-1.0);
     }
-    else if (token.type == SOMA)
+    else if (token.type == SUM)
     {
         token = get_token();
         var_restr(1.0);
@@ -556,15 +556,15 @@ void restricao()
 
     switch (tipo_des())
     {
-    case MENORIGUAL:
+    case LEQUAL:
         menor_igual_rest();
         break;
 
-    case IGUAL:
+    case EQUAL:
         igual_rest();
         break;
 
-    case MAIORIGUAL:
+    case GEQUAL:
         maior_igual_rest();
         break;
     }
@@ -598,7 +598,7 @@ void resto_eq()
 {
     /*  + <var_restr> | - <var_restr> | &  */
     token = get_token();
-    if (token.type == SOMA)
+    if (token.type == SUM)
     {
         token = get_token();
         var_restr(1);
@@ -613,12 +613,12 @@ void resto_eq()
 size_t tipo_des() // need
 {
     /*  <= | = | >=  */
-    if (token.type == MENORIGUAL)
-        return MENORIGUAL;
-    else if (token.type == IGUAL)
-        return IGUAL;
-    else if (token.type == MAIORIGUAL)
-        return MAIORIGUAL;
+    if (token.type == LEQUAL)
+        return LEQUAL;
+    else if (token.type == EQUAL)
+        return EQUAL;
+    else if (token.type == GEQUAL)
+        return GEQUAL;
     else
     {
         printf("\n[ERROR]: Wrong syntax, expected mathematical operator or variable, but was received '%s'\n\n", token.value);
@@ -641,19 +641,19 @@ void resto_rest()
 void add_vet_b(double escalar)
 {
     if (number_rest == 1)
-        vetor_b = (matrix_t)malloc(sizeof(vector_t));
+        vector_b = (matrix_t)malloc(sizeof(vector_t));
     else
-        vetor_b = (matrix_t)realloc(vetor_b, sizeof(vector_t) * number_rest);
+        vector_b = (matrix_t)realloc(vector_b, sizeof(vector_t) * number_rest);
 
-    if (!vetor_b)
+    if (!vector_b)
     {
         printf("\n[ERROR]: Memory allocation failure, function add_vet_b()\n\n");
         fclose(arq);
         exit(EXIT_FAILURE);
     }
 
-    vetor_b[number_rest - 1] = (vector_t)malloc(sizeof(double));
-    vetor_b[number_rest - 1][0] = escalar;
+    vector_b[number_rest - 1] = (vector_t)malloc(sizeof(double));
+    vector_b[number_rest - 1][0] = escalar;
 }
 
 void menor_igual_rest()
@@ -744,7 +744,7 @@ void cria_var(double escalar, string name_var)
         }
 
     variavel_t var;
-    var.cost = (double)(sinal * escalar);
+    var.cost = (double)(signal * escalar);
     var.name = (string)malloc(sizeof(char) * (strlen(token.value) + 1));
     var.index = var_index++;
     var.type = ORIGINAL;
