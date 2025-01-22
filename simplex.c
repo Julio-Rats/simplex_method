@@ -47,7 +47,7 @@ void simplex()
     matrix_t custo_basico_A = init_matriz(1, 1);         // ci^t*B^-1*Aj | j var non-basic, i basic variable.
 
     matrix_t Xb = init_matriz(number_base, 1);      // x = B^-1*b
-    matrix_t vetor_y = init_matriz(number_base, 1); // y = B^-1*Aj | j non-basic.
+    matrix_t vetor_d = init_matriz(number_base, 1); // d = B^-1*Aj | j non-basic.
     matrix_t coef = init_matriz(number_base, 1);    // c ; min c^t*x
 
     size_t vpermut_tr[number_base];
@@ -107,10 +107,6 @@ void simplex()
                 printf("%.4lf\n", lambda[i][0]);
         }
 
-        double custo, menor_custo = DBL_MAX;
-        long variavel_entra = -1;
-        size_t variavel_sai = 0;
-
         if (custos)
         {
             free(custos);
@@ -142,6 +138,7 @@ void simplex()
             printf("\nObjective function value: %.4lf\n", sinal * fx);
 
         sort = 0;
+        double custo, menor_custo = DBL_MAX;
         bool otimo = true;
 
         if (verbose)
@@ -168,6 +165,8 @@ void simplex()
             break;
 
         bool ilimitada = true;
+        long variavel_entra;
+        size_t variavel_sai = 0;
         double passo, menor_passo = 0; // safe warning (warning uninitialized)
         do
         {
@@ -178,14 +177,14 @@ void simplex()
             }
 
             transposta(var_Nbase[(unsigned long)variavel_entra].aj, var_Nbase_tr, 1, number_base);
-            solver_LU(matriz_Base_lu, vpermut, vetor_y, var_Nbase_tr, number_base);
+            solver_LU(matriz_Base_lu, vpermut, vetor_d, var_Nbase_tr, number_base);
 
             for (size_t i = 0; i < number_base; i++)
             {
-                if (vetor_y[i][0] <= EPSILON)
+                if (vetor_d[i][0] <= EPSILON)
                     continue;
 
-                passo = (Xb[i][0]) / (vetor_y[i][0]);
+                passo = (Xb[i][0]) / (vetor_d[i][0]);
                 if (passo <= menor_passo || ilimitada) // first check
                 {
                     if (bland && passo == menor_passo && !ilimitada)
@@ -201,11 +200,11 @@ void simplex()
                 printf("\nVector d = B^-1 * A[j], j index of variable '%s'%s\n", var_Nbase[(unsigned long)variavel_entra].name,
                        bland ? " (Enable Bland's pivot rule):" : ":");
                 for (size_t i = 0; i < number_base; i++)
-                    printf("%.4lf\n", vetor_y[i][0]);
+                    printf("%.4lf\n", vetor_d[i][0]);
             }
 
             if (ilimitada)
-                printf("\nDidn't find any positive y for var '%s'\n", var_Nbase[(unsigned long)variavel_entra].name);
+                printf("\nDidn't find any positive d for var '%s'\n", var_Nbase[(unsigned long)variavel_entra].name);
 
         } while (ilimitada);
 
