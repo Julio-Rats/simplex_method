@@ -17,16 +17,16 @@ $(TARGET): $(OBJFILES)
 
 # Compilation rules
 input.o: input.c structs.h
-	$(CC) $(MYFLAGS) -c input.c
+	$(CC) -c input.c $(MYFLAGS) 
 
 sistema_linear.o: sistema_linear.c sistema_linear.h structs.h
-	$(CC) $(MYFLAGS) -c sistema_linear.c
+	$(CC) -c sistema_linear.c $(MYFLAGS)
 
 simplex.o: simplex.c sistema_linear.c sistema_linear.h
-	$(CC) $(MYFLAGS) -c simplex.c
+	$(CC) -c simplex.c $(MYFLAGS)
 
 main.o: main.c input.c simplex.c
-	$(CC) $(MYFLAGS) -c main.c
+	$(CC) -c main.c $(MYFLAGS) 
 
 clean:
 	rm -f *.o

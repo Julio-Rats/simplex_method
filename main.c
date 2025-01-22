@@ -4,7 +4,7 @@
 
 #include "structs.h"
 
-#ifdef _WIN32
+#if defined(__CYGWIN__) || defined(_WIN32)
 #include <windows.h>
 #elif __linux__
 #include <locale.h>
@@ -72,7 +72,7 @@ void get_args(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
 
-#ifdef _WIN32
+#if defined(__CYGWIN__) || defined(_WIN32)
     SetConsoleOutputCP(CP_UTF8);
 #elif __linux__
     setlocale(LC_NUMERIC, "en_US.UTF-8");
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
         simplex();
     }
 
-#ifdef _WIN32
+#if defined(__CYGWIN__) || defined(_WIN32)
     SetConsoleOutputCP(GetConsoleOutputCP());
 #endif
 
