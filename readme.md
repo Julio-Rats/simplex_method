@@ -21,7 +21,7 @@ The objective function can be declared using **max**, **maximize**, **min**, or 
 The program can be compiled using the **Makefile** with the `make` command, or manually by navigating to the folder via the terminal and using the compiler.
 Example of manual compilation:
 ~~~sh
-gcc -c *.o
+gcc -c *.c
 gcc *.o -o simplex.exe
 ~~~
 
