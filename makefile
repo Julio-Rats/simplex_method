@@ -1,6 +1,6 @@
 CC = gcc
 
-MYFLAGS = -O2 -Wall
+MYFLAGS = -O2 -Wall -std=c17
 
 TARGET = simplex
 
